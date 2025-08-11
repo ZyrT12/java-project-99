@@ -1,16 +1,21 @@
-FROM gradle:8.7-jdk21 AS build
-WORKDIR /home/gradle/project
-
-COPY . .
-RUN gradle :app:bootJar --no-daemon
-
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
 
-COPY --from=build /home/gradle/project/app/build/libs/*.jar app.jar
+COPY gradlew ./
+COPY gradle ./gradle
+COPY settings.gradle.kts ./
+COPY app/build.gradle.kts app/build.gradle.kts
+COPY app/src app/src
 
-ENV JAVA_OPTS=""
-ENV SPRING_PROFILES_ACTIVE=prod
+RUN chmod +x ./gradlew
+RUN ./gradlew :app:clean :app:shadowJar --no-daemon
+
+FROM eclipse-temurin:21-jre
+WORKDIR /opt/app
+
+COPY --from=builder /app/app/build/libs/app-all.jar /opt/app/app.jar
+
+ENV PORT=8080
 EXPOSE 8080
 
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]
+CMD ["java", "-jar", "/opt/app/app.jar"]

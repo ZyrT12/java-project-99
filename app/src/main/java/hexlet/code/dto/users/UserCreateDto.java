@@ -9,4 +9,6 @@ public record UserCreateDto(
         String firstName,
         String lastName,
         @NotBlank @Size(min = 3) String password
-) {}
+) {
+
+}

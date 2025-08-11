@@ -12,8 +12,41 @@ plugins {
 	id("io.freefair.lombok") version "8.4"
 }
 
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation("io.javalin:javalin:5.6.2")
+	implementation("io.javalin:javalin-jackson:5.6.2")
+
+	implementation ("org.springframework.boot:spring-boot-starter-data-jpa")
+	runtimeOnly ("com.h2database:h2")
+	runtimeOnly ("org.postgresql:postgresql")
+
+	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+	implementation("org.hibernate.validator:hibernate-validator:8.0.1.Final")
+	implementation("org.mindrot:jbcrypt:0.4")
+
+	testImplementation("io.rest-assured:rest-assured:5.4.0")
+	testImplementation("org.assertj:assertj-core:3.26.0")
+
+	implementation("com.auth0:java-jwt:4.4.0")
+	implementation("at.favre.lib:bcrypt:0.10.2")
+
+	testImplementation(kotlin("test"))
+
+}
+
 jacoco {
 	toolVersion = "0.8.11"
+}
+
+application {
+	mainClass.set("hexlet.code.AppApplication")
 }
 
 group = "hexlet.code"
@@ -31,29 +64,6 @@ sonar {
 		property("sonar.organization", "zyrt12")
 		property("sonar.host.url", "https://sonarcloud.io")
 	}
-}
-
-repositories {
-	mavenCentral()
-}
-
-dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-web")
-	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-
-	implementation ("org.springframework.boot:spring-boot-starter-data-jpa")
-	runtimeOnly ("com.h2database:h2")
-	runtimeOnly ("org.postgresql:postgresql")
-
-	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
-	implementation("org.hibernate.validator:hibernate-validator:8.0.1.Final")
-	implementation("org.mindrot:jbcrypt:0.4")
-	implementation("io.javalin:javalin:5.6.2")
-
-	testImplementation("io.rest-assured:rest-assured:5.4.0")
-	testImplementation("org.assertj:assertj-core:3.26.0")
-
 }
 
 tasks.sonar {

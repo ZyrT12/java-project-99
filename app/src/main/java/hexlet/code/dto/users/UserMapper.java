@@ -3,7 +3,9 @@ package hexlet.code.dto.users;
 import hexlet.code.model.User;
 
 public final class UserMapper {
-    private UserMapper() {}
+    private UserMapper() {
+
+    }
 
     public static UserResponseDto toDto(User u) {
         return new UserResponseDto(
