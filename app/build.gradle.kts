@@ -45,6 +45,15 @@ dependencies {
 	implementation ("org.springframework.boot:spring-boot-starter-data-jpa")
 	runtimeOnly ("com.h2database:h2")
 	runtimeOnly ("org.postgresql:postgresql")
+
+	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+	implementation("org.hibernate.validator:hibernate-validator:8.0.1.Final")
+	implementation("org.mindrot:jbcrypt:0.4")
+	implementation("io.javalin:javalin:5.6.2")
+
+	testImplementation("io.rest-assured:rest-assured:5.4.0")
+	testImplementation("org.assertj:assertj-core:3.26.0")
+
 }
 
 tasks.sonar {
