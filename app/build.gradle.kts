@@ -41,6 +41,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	implementation ("org.springframework.boot:spring-boot-starter-data-jpa")
+	runtimeOnly ("com.h2database:h2")
+	runtimeOnly ("org.postgresql:postgresql")
 }
 
 tasks.sonar {
@@ -49,18 +53,7 @@ tasks.sonar {
 
 tasks.test {
 	useJUnitPlatform()
-	finalizedBy(tasks.jacocoTestReport) // после тестов
-	testLogging {
-		exceptionFormat = TestExceptionFormat.FULL
-		events = setOf(TestLogEvent.FAILED, TestLogEvent.PASSED, TestLogEvent.SKIPPED)
-		showStandardStreams = true
-	}
-	reports {
-		junitXml.required.set(true) // убедимся, что XML точно есть
-		html.required.set(true)
-	}
-
-	systemProperty("junit.jupiter.execution.parallel.enabled", "false")
+	finalizedBy(tasks.jacocoTestReport)
 }
 
 tasks.jacocoTestReport {

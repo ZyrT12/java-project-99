@@ -1,19 +1,25 @@
-FROM eclipse-temurin:21-jdk
-
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
 
+COPY gradlew .
 COPY gradle gradle
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
-COPY gradlew .
+COPY config config
 RUN chmod +x gradlew
 
+RUN ./gradlew --no-daemon dependencies
+
 COPY src src
-COPY config config
 
-RUN ./gradlew --no-daemon build
+RUN ./gradlew --no-daemon clean installDist
 
-ENV JAVA_OPTS="-Xmx512M -Xms512M"
+FROM eclipse-temurin:21-jdk
+WORKDIR /opt/app
+
+COPY --from=builder /app/build/install/app /opt/app
+
 EXPOSE 7070
+ENV JAVA_OPTS=""
 
-CMD ["java", "-jar", "build/libs/HexletJavalin-1.0-SNAPSHOT.jar"]
+CMD ["/opt/app/bin/app"]
