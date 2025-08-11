@@ -3,5 +3,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: update
-  datasource:
-    driver-class-name: org.h2.Driver
+
+server:
+  port: ${PORT:8080}
