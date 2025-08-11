@@ -12,13 +12,18 @@ import hexlet.code.dto.users.UserMapper;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 
 import org.mindrot.jbcrypt.BCrypt;
+import org.springframework.stereotype.Service;
 
+
+@Service
+@Transactional
 public class UserService {
 
     private final UserRepository repo;

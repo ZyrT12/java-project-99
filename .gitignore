@@ -16,3 +16,5 @@ app/.gradle/
 
 # Gradle wrapper logs
 app/*.log
+
+app/node_modules/

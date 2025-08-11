@@ -7,26 +7,30 @@ import hexlet.code.controllers.AuthController;
 import hexlet.code.controllers.UsersController;
 import hexlet.code.dto.users.UserCreateDto;
 import hexlet.code.repository.UserRepository;
-import hexlet.code.security.AppAccessManager;
-import hexlet.code.security.AuthUser;
 import hexlet.code.security.JwtAuthMiddleware;
 import hexlet.code.security.Role;
 import hexlet.code.service.UserService;
 import io.javalin.Javalin;
+import io.javalin.http.UnauthorizedResponse;
+import io.javalin.http.staticfiles.Location;
 import io.javalin.json.JavalinJackson;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
+@SpringBootApplication(scanBasePackages = "hexlet.code")
 public class AppApplication {
 
     private AppApplication() {}
 
     public static void main(String[] args) {
         ConfigurableApplicationContext spring =
-                new SpringApplicationBuilder(AppApplication.class).run(args);
+                new SpringApplicationBuilder(AppApplication.class)
+                        .web(WebApplicationType.NONE)
+                        .run(args);
 
         UserRepository userRepository = spring.getBean(UserRepository.class);
-
         UserService userService = spring.getBean(UserService.class);
 
         UsersController usersController = new UsersController(userService);
@@ -38,13 +42,37 @@ public class AppApplication {
 
         Javalin app = Javalin.create(cfg -> {
             cfg.showJavalinBanner = false;
-            cfg.jsonMapper(new JavalinJackson(objectMapper));
-            cfg.accessManager(new AppAccessManager()); // ← важно
+
+            cfg.jsonMapper(new JavalinJackson().updateMapper(mapper -> {
+                mapper.registerModule(new JavaTimeModule());
+                mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            }));
+
+            cfg.staticFiles.add(staticFiles -> {
+                staticFiles.hostedPath = "/";
+                staticFiles.directory = "static";
+                staticFiles.location = Location.CLASSPATH;
+            });
         });
 
-        app.before(new JwtAuthMiddleware());
+        app.before("/api/*", new JwtAuthMiddleware());
 
+        app.beforeMatched(ctx -> {
+            var roles = ctx.routeRoles();
+            if (roles.isEmpty() || roles.contains(Role.ANYONE)) {
+                return;
+            }
+
+            var au = JwtAuthMiddleware.getAuthUser(ctx);
+            if (au == null && roles.contains(Role.AUTHENTICATED)) {
+                throw new UnauthorizedResponse("Unauthorized");
+            }
+        });
+        
         app.get("/ping", ctx -> ctx.result("pong"), Role.ANYONE);
+
+        app.get("/", ctx -> ctx.redirect("/index.html"), Role.ANYONE);
+
         app.post("/api/login", authController::login, Role.ANYONE);
 
         app.get("/api/users/{id}", usersController::getOne, Role.AUTHENTICATED);
@@ -52,9 +80,13 @@ public class AppApplication {
         app.post("/api/users", usersController::create, Role.AUTHENTICATED);
 
         app.put("/api/users/{id}", ctx -> {
-            AuthUser au = JwtAuthMiddleware.getAuthUser(ctx); // не null (проверил AccessManager)
+            var au = JwtAuthMiddleware.getAuthUser(ctx);
             long targetId = Long.parseLong(ctx.pathParam("id"));
-            if (!au.isAdmin() && au.id() != targetId) { // ← сравнение с примитивом
+            if (au == null) {
+                ctx.status(401).result("Unauthorized");
+                return;
+            }
+            if (!au.isAdmin() && au.id() != targetId) {
                 ctx.status(403).result("Forbidden");
                 return;
             }
@@ -62,8 +94,12 @@ public class AppApplication {
         }, Role.AUTHENTICATED);
 
         app.patch("/api/users/{id}", ctx -> {
-            AuthUser au = JwtAuthMiddleware.getAuthUser(ctx);
+            var au = JwtAuthMiddleware.getAuthUser(ctx);
             long targetId = Long.parseLong(ctx.pathParam("id"));
+            if (au == null) {
+                ctx.status(401).result("Unauthorized");
+                return;
+            }
             if (!au.isAdmin() && au.id() != targetId) {
                 ctx.status(403).result("Forbidden");
                 return;
@@ -72,8 +108,12 @@ public class AppApplication {
         }, Role.AUTHENTICATED);
 
         app.delete("/api/users/{id}", ctx -> {
-            AuthUser au = JwtAuthMiddleware.getAuthUser(ctx);
+            var au = JwtAuthMiddleware.getAuthUser(ctx);
             long targetId = Long.parseLong(ctx.pathParam("id"));
+            if (au == null) {
+                ctx.status(401).result("Unauthorized");
+                return;
+            }
             if (!au.isAdmin() && au.id() != targetId) {
                 ctx.status(403).result("Forbidden");
                 return;
@@ -83,6 +123,7 @@ public class AppApplication {
 
         int port = resolvePort();
         app.start(port);
+
         seedAdmin(userService);
     }
 
