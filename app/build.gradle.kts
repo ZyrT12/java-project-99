@@ -30,11 +30,14 @@ dependencies {
 	implementation("org.mindrot:jbcrypt:0.4")
 	implementation("com.auth0:java-jwt:4.4.0")
 	implementation("at.favre.lib:bcrypt:0.10.2")
+	implementation("org.springframework.boot:spring-boot-starter-security")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testImplementation("io.rest-assured:rest-assured:5.4.0")
 	testImplementation("org.assertj:assertj-core:3.26.0")
+	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("com.h2database:h2")
 
 	testImplementation(kotlin("test"))
 }

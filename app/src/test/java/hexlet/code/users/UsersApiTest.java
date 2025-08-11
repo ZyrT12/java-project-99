@@ -1,20 +1,33 @@
 package hexlet.code.users;
 
 import io.restassured.RestAssured;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.Matchers.*;
 
-public class UsersApiTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureTestDatabase
+@ActiveProfiles("test")
+class UsersApiTest {
+
+    @LocalServerPort
+    int port;
+
+    @BeforeEach
+    void setup() {
+        RestAssured.baseURI = "http://localhost";
+        RestAssured.port = port;
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+    }
 
     @Test
     void crud() {
-        RestAssured.baseURI = "http://localhost:8080";
-
         var id =
                 given().contentType("application/json")
                         .body("""
@@ -35,11 +48,10 @@ public class UsersApiTest {
                 .then().statusCode(200)
                 .body("size()", greaterThanOrEqualTo(1));
 
-        // UPDATE (partial)
         given().contentType("application/json")
                 .body("""
-                        {"email":"jack@yahoo.com","password":"new-password"}
-                      """)
+                {"email":"jack@yahoo.com","password":"new-password"}
+            """)
                 .when().put("/api/users/" + id)
                 .then().statusCode(200)
                 .body("email", equalTo("jack@yahoo.com"));
@@ -47,17 +59,18 @@ public class UsersApiTest {
         given().when().delete("/api/users/" + id)
                 .then().statusCode(204);
 
-        given().when().get("/api/users/" + id).then().statusCode(404);
+        given().when().get("/api/users/" + id)
+                .then().statusCode(404);
     }
 
     @Test
     void validation() {
-        RestAssured.baseURI = "http://localhost:8080";
         given().contentType("application/json")
                 .body("""
-                        {"email":"not-email","password":"12"}
-                      """)
+                {"email":"not-email","password":"12"}
+            """)
                 .when().post("/api/users")
-                .then().statusCode(400);
+                .then().statusCode(400)
+                .log().all();
     }
 }

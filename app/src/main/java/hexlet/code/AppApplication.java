@@ -68,16 +68,12 @@ public class AppApplication {
                 throw new UnauthorizedResponse("Unauthorized");
             }
         });
-        
+
         app.get("/ping", ctx -> ctx.result("pong"), Role.ANYONE);
 
         app.get("/", ctx -> ctx.redirect("/index.html"), Role.ANYONE);
 
         app.post("/api/login", authController::login, Role.ANYONE);
-
-        app.get("/api/users/{id}", usersController::getOne, Role.AUTHENTICATED);
-        app.get("/api/users", usersController::list, Role.AUTHENTICATED);
-        app.post("/api/users", usersController::create, Role.AUTHENTICATED);
 
         app.put("/api/users/{id}", ctx -> {
             var au = JwtAuthMiddleware.getAuthUser(ctx);
@@ -90,7 +86,7 @@ public class AppApplication {
                 ctx.status(403).result("Forbidden");
                 return;
             }
-            usersController.update(ctx);
+
         }, Role.AUTHENTICATED);
 
         app.patch("/api/users/{id}", ctx -> {
@@ -104,7 +100,6 @@ public class AppApplication {
                 ctx.status(403).result("Forbidden");
                 return;
             }
-            usersController.update(ctx);
         }, Role.AUTHENTICATED);
 
         app.delete("/api/users/{id}", ctx -> {
@@ -118,7 +113,7 @@ public class AppApplication {
                 ctx.status(403).result("Forbidden");
                 return;
             }
-            usersController.delete(ctx);
+
         }, Role.AUTHENTICATED);
 
         int port = resolvePort();

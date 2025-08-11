@@ -1,8 +1,26 @@
 package hexlet.code.config;
 
-public final class SecurityConfig {
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
 
-    public static final String JWT_SECRET = System.getenv().getOrDefault("JWT_SECRET", "change-me-in-prod");
-    public static final long JWT_TTL_SECONDS = 60L * 60L * 24L; // 24 часа
-    private SecurityConfig() {}
+@Configuration
+public class SecurityConfig {
+
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable());
+
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.GET, "/api/task_statuses/**").permitAll()
+                .requestMatchers("/api/task_statuses/**").authenticated()   // POST/PUT/DELETE
+                .anyRequest().permitAll()
+        );
+
+        http.httpBasic(Customizer.withDefaults());
+        return http.build();
+    }
 }

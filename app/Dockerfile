@@ -1,21 +1,21 @@
 FROM eclipse-temurin:21-jdk AS builder
-WORKDIR /app
+WORKDIR /project
 
-COPY gradlew ./
+COPY gradlew ./gradlew
 COPY gradle ./gradle
 COPY settings.gradle.kts ./
 COPY app/build.gradle.kts app/build.gradle.kts
-COPY app/src app/src
+
+COPY app ./app
 
 RUN chmod +x ./gradlew
-RUN ./gradlew :app:clean :app:shadowJar --no-daemon
+RUN ./gradlew :app:clean :app:installDist --no-daemon
 
+# ---- runtime stage
 FROM eclipse-temurin:21-jre
 WORKDIR /opt/app
-
-COPY --from=builder /app/app/build/libs/app-all.jar /opt/app/app.jar
+COPY --from=builder /project/app/build/install/app /opt/app
 
 ENV PORT=8080
 EXPOSE 8080
-
-CMD ["java", "-jar", "/opt/app/app.jar"]
+CMD ["/opt/app/bin/app"]

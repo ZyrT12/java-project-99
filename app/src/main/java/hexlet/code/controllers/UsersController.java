@@ -6,10 +6,17 @@ import hexlet.code.service.UserService;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+
+@RestController
+@RequestMapping("/users")
 public class UsersController {
     private final UserService service;
-    public UsersController(UserService service) { this.service = service; }
+    public UsersController(UserService service) {
+        this.service = service;
+    }
 
     public void getOne(Context ctx) {
         try {
