@@ -34,7 +34,7 @@ public final class AuthController {
             throw new UnauthorizedResponse("Invalid credentials");
         }
 
-        var token = JwtService.createToken(user.getId(), user.getEmail(), "USER"); // роль по умолчанию
+        var token = JwtService.createToken(user.getId(), user.getEmail(), "USER");
         ctx.result(token);
     }
 }

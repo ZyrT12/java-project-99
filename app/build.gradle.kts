@@ -31,6 +31,7 @@ dependencies {
 	implementation("com.auth0:java-jwt:4.4.0")
 	implementation("at.favre.lib:bcrypt:0.10.2")
 	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.flywaydb:flyway-core")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")

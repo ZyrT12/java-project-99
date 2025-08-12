@@ -10,7 +10,16 @@ import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -38,8 +47,12 @@ public class TaskStatusController {
     @ResponseStatus(HttpStatus.CREATED)
     @Transactional
     public TaskStatus create(@Valid @RequestBody TaskStatusCreateDto body) {
-        if (repo.existsByName(body.getName())) throw new EntityExistsException("name already used");
-        if (repo.existsBySlug(body.getSlug())) throw new EntityExistsException("slug already used");
+        if (repo.existsByName(body.getName())) {
+            throw new EntityExistsException("name already used");
+        }
+        if (repo.existsBySlug(body.getSlug())) {
+            throw new EntityExistsException("slug already used");
+        }
         var saved = repo.save(new TaskStatus(body.getName(), body.getSlug()));
         return saved;
     }
@@ -48,14 +61,20 @@ public class TaskStatusController {
     @Transactional
     public TaskStatus update(@PathVariable Long id, @RequestBody TaskStatusUpdateDto body) {
         var entity = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("TaskStatus not found"));
+
         if (body.getName() != null) {
-            if (repo.existsByName(body.getName()) && !body.getName().equals(entity.getName()))
+
+            if (repo.existsByName(body.getName()) && !body.getName().equals(entity.getName())) {
                 throw new EntityExistsException("name already used");
+            }
             entity.setName(body.getName());
         }
         if (body.getSlug() != null) {
-            if (repo.existsBySlug(body.getSlug()) && !body.getSlug().equals(entity.getSlug()))
+
+            if (repo.existsBySlug(body.getSlug()) && !body.getSlug().equals(entity.getSlug())) {
                 throw new EntityExistsException("slug already used");
+            }
+
             entity.setSlug(body.getSlug());
         }
         return repo.save(entity);
@@ -64,20 +83,27 @@ public class TaskStatusController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        if (!repo.existsById(id)) throw new EntityNotFoundException("TaskStatus not found");
+        if (!repo.existsById(id)) {
+            throw new EntityNotFoundException("TaskStatus not found");
+        }
         repo.deleteById(id);
     }
 
-    // Общая обработка типичных ошибок под удобные статусы
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
-    public String onNotFound(RuntimeException e) { return e.getMessage(); }
+    public String onNotFound(RuntimeException e) {
+        return e.getMessage();
+    }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler({EntityExistsException.class, DataIntegrityViolationException.class})
-    public String onConflict(RuntimeException e) { return e.getMessage(); }
+    public String onConflict(RuntimeException e) {
+        return e.getMessage();
+    }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({IllegalArgumentException.class})
-    public String onBadReq(RuntimeException e) { return e.getMessage(); }
+    public String onBadReq(RuntimeException e) {
+        return e.getMessage();
+    }
 }

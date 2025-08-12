@@ -34,5 +34,7 @@ public final class JwtService {
         }
     }
 
-    private JwtService() {}
+    private JwtService() {
+
+    }
 }
