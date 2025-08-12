@@ -16,6 +16,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.JoinType;
 
 @Service
 @Transactional
@@ -34,75 +36,62 @@ public class TaskService {
     }
 
     public TaskResponseDto get(Long id) {
-        Task task = taskRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Task not found"));
+        var task = taskRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Task not found: " + id));
         return toDto(task);
     }
 
     public List<TaskResponseDto> list() {
-        return taskRepo.findAll().stream().map(this::toDto).toList();
+        return taskRepo.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
     public TaskResponseDto create(TaskCreateDto dto) {
         validateCreate(dto);
-
-        Task task = new Task();
-        task.setTitle(dto.getTitle().trim());
+        var status = statusRepo.findById(dto.getTaskStatusId()).orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
+        var task = new Task();
+        task.setTitle(dto.getTitle());
         task.setContent(dto.getDescription());
-
-        var status = statusRepo.findById(dto.getTaskStatusId())
-                .orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
         task.setTaskStatus(status);
-
         if (dto.getExecutorId() != null) {
-            var assignee = userRepo.findById(dto.getExecutorId())
-                    .orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
+            var assignee = userRepo.findById(dto.getExecutorId()).orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
             task.setAssignee(assignee);
         }
-
         applyLabels(task, dto.getLabelIds());
-
-        Task saved = taskRepo.save(task);
+        var saved = taskRepo.save(task);
         return toDto(saved);
     }
 
     public TaskResponseDto update(Long id, TaskUpdateDto dto) {
-        Task task = taskRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Task not found"));
-
+        var task = taskRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Task not found: " + id));
         if (dto.getTitle() != null) {
-            String t = dto.getTitle().trim();
-            if (t.isEmpty()) {
-                throw new IllegalArgumentException("title must be at least 1 char");
-            }
-            task.setTitle(t);
+            task.setTitle(dto.getTitle());
         }
         if (dto.getDescription() != null) {
             task.setContent(dto.getDescription());
         }
         if (dto.getTaskStatusId() != null) {
-            var st = statusRepo.findById(dto.getTaskStatusId())
-                    .orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
+            var st = statusRepo.findById(dto.getTaskStatusId()).orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
             task.setTaskStatus(st);
         }
         if (dto.getExecutorId() != null) {
             if (dto.getExecutorId() == 0L) {
                 task.setAssignee(null);
             } else {
-                var assignee = userRepo.findById(dto.getExecutorId())
-                        .orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
+                var assignee = userRepo.findById(dto.getExecutorId()).orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
                 task.setAssignee(assignee);
             }
         }
         if (dto.getLabelIds() != null) {
             applyLabels(task, dto.getLabelIds());
         }
-
-        Task saved = taskRepo.save(task);
+        var saved = taskRepo.save(task);
         return toDto(saved);
     }
 
     public void delete(Long id) {
-        Task task = taskRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Task not found"));
-        taskRepo.delete(task);
+        if (!taskRepo.existsById(id)) {
+            throw new NoSuchElementException("Task not found: " + id);
+        }
+        taskRepo.deleteById(id);
     }
 
     private void validateCreate(TaskCreateDto dto) {
@@ -118,7 +107,11 @@ public class TaskService {
         if (labelIds == null) {
             return;
         }
-        Set<Label> labels = new HashSet<>(labelRepo.findAllById(labelIds));
+        Set<Label> labels = new HashSet<>();
+        for (Long id : labelIds) {
+            var lbl = labelRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Label not found: " + id));
+            labels.add(lbl);
+        }
         task.setLabels(labels);
     }
 
@@ -130,8 +123,35 @@ public class TaskService {
         dto.setTitle(t.getTitle());
         dto.setDescription(t.getContent());
         dto.setExecutorId(t.getAssignee() == null ? null : t.getAssignee().getId());
-        dto.setTaskStatusId(t.getTaskStatus().getId());
+        dto.setTaskStatusId(t.getTaskStatus() == null ? null : t.getTaskStatus().getId());
         dto.setLabelIds(t.getLabels() == null ? List.of() : t.getLabels().stream().map(Label::getId).collect(Collectors.toList()));
         return dto;
+    }
+
+    public List<TaskResponseDto> list(String titleCont, Long assigneeId, String statusSlug, Long labelId) {
+        Specification<Task> spec = (root, query, cb) -> cb.conjunction();
+
+        if (titleCont != null && !titleCont.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.like(cb.lower(root.get("title")), "%" + titleCont.toLowerCase() + "%"));
+        }
+        if (assigneeId != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.join("assignee", JoinType.LEFT).get("id"), assigneeId));
+        }
+        if (statusSlug != null && !statusSlug.isBlank()) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.join("taskStatus", JoinType.LEFT).get("slug"), statusSlug));
+        }
+        if (labelId != null) {
+            spec = spec.and((root, query, cb) -> {
+                query.distinct(true);
+                return cb.equal(root.join("labels", JoinType.INNER).get("id"), labelId);
+            });
+        }
+
+        return taskRepo.findAll(spec).stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 }

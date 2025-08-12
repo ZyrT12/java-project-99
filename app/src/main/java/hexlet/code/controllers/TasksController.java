@@ -1,8 +1,11 @@
 package hexlet.code.controllers;
 
 import hexlet.code.dto.tasks.TaskCreateDto;
+import hexlet.code.dto.tasks.TaskResponseDto;
 import hexlet.code.dto.tasks.TaskUpdateDto;
 import hexlet.code.service.TaskService;
+import jakarta.annotation.security.PermitAll;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,9 +36,13 @@ public class TasksController {
         return service.get(id);
     }
 
+    @PermitAll
     @GetMapping
-    public Object list() {
-        return service.list();
+    public List<TaskResponseDto> list(@RequestParam(value = "titleCont", required = false) String titleCont,
+                                      @RequestParam(value = "assigneeId", required = false) Long assigneeId,
+                                      @RequestParam(value = "status", required = false) String status,
+                                      @RequestParam(value = "labelId", required = false) Long labelId) {
+        return service.list(titleCont, assigneeId, status, labelId);
     }
 
     @PostMapping

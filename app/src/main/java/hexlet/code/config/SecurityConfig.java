@@ -20,6 +20,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/task_statuses/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tasks/**").permitAll()
                 .requestMatchers("/api/task_statuses/**").authenticated()
                 .requestMatchers("/api/tasks/**").authenticated()
                 .requestMatchers("/api/labels/**").authenticated()
