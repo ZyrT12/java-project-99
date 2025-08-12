@@ -18,12 +18,11 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable());
 
         http.authorizeHttpRequests(auth -> auth
-                // task_statuses
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/task_statuses/**").permitAll()
                 .requestMatchers("/api/task_statuses/**").authenticated()
-
                 .requestMatchers("/api/tasks/**").authenticated()
-
+                .requestMatchers("/api/labels/**").authenticated()
                 .anyRequest().permitAll()
         );
 

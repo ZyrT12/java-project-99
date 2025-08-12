@@ -1,11 +1,12 @@
 package hexlet.code.controllers;
 
-import hexlet.code.dto.tasks.TaskCreateDto;
-import hexlet.code.dto.tasks.TaskUpdateDto;
-import hexlet.code.service.TaskService;
+import hexlet.code.dto.labels.LabelCreateDto;
+import hexlet.code.dto.labels.LabelDto;
+import hexlet.code.dto.labels.LabelUpdateDto;
+import hexlet.code.service.LabelService;
+import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,35 +18,33 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/tasks")
-@PreAuthorize("isAuthenticated()")
-public class TasksController {
+@RequestMapping("/api/labels")
+public class LabelsController {
+    private final LabelService service;
 
-    private final TaskService service;
-
-    public TasksController(TaskService service) {
+    public LabelsController(LabelService service) {
         this.service = service;
     }
 
     @GetMapping("/{id}")
-    public Object getOne(@PathVariable Long id) {
+    public LabelDto getOne(@PathVariable Long id) {
         return service.get(id);
     }
 
     @GetMapping
-    public Object list() {
-        return service.list();
+    public List<LabelDto> getAll() {
+        return service.getAll();
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TaskCreateDto body) {
-        var dto = service.create(body);
-        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    @ResponseStatus(HttpStatus.CREATED)
+    public LabelDto create(@Valid @RequestBody LabelCreateDto data) {
+        return service.create(data);
     }
 
     @PutMapping("/{id}")
-    public Object update(@PathVariable Long id, @RequestBody TaskUpdateDto body) {
-        return service.update(id, body);
+    public LabelDto update(@PathVariable Long id, @Valid @RequestBody LabelUpdateDto data) {
+        return service.update(id, data);
     }
 
     @DeleteMapping("/{id}")

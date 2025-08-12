@@ -1,13 +1,10 @@
-package hexlet.code.dto;
+package hexlet.code.dto.tasks;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-public class TaskStatusCreateDto {
-    @NotBlank @Size(min = 1)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class TaskStatusUpdateDto {
     private String name;
-
-    @NotBlank @Size(min = 1)
     private String slug;
 
     public String getName() {

@@ -1,7 +1,7 @@
 package hexlet.code.controllers;
 
-import hexlet.code.dto.TaskStatusCreateDto;
-import hexlet.code.dto.TaskStatusUpdateDto;
+import hexlet.code.dto.tasks.TaskStatusCreateDto;
+import hexlet.code.dto.tasks.TaskStatusUpdateDto;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.repository.TaskStatusRepository;
 import jakarta.persistence.EntityExistsException;
