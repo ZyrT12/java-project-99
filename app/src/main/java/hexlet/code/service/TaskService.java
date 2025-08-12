@@ -28,7 +28,8 @@ public class TaskService {
     private final TaskStatusRepository statusRepo;
     private final LabelRepository labelRepo;
 
-    public TaskService(TaskRepository taskRepo, UserRepository userRepo, TaskStatusRepository statusRepo, LabelRepository labelRepo) {
+    public TaskService(TaskRepository taskRepo, UserRepository userRepo,
+                       TaskStatusRepository statusRepo, LabelRepository labelRepo) {
         this.taskRepo = taskRepo;
         this.userRepo = userRepo;
         this.statusRepo = statusRepo;
@@ -46,13 +47,15 @@ public class TaskService {
 
     public TaskResponseDto create(TaskCreateDto dto) {
         validateCreate(dto);
-        var status = statusRepo.findById(dto.getTaskStatusId()).orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
+        var status = statusRepo.findById(dto.getTaskStatusId())
+                .orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
         var task = new Task();
         task.setTitle(dto.getTitle());
         task.setContent(dto.getDescription());
         task.setTaskStatus(status);
         if (dto.getExecutorId() != null) {
-            var assignee = userRepo.findById(dto.getExecutorId()).orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
+            var assignee = userRepo.findById(dto.getExecutorId())
+                .orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
             task.setAssignee(assignee);
         }
         applyLabels(task, dto.getLabelIds());
@@ -69,14 +72,18 @@ public class TaskService {
             task.setContent(dto.getDescription());
         }
         if (dto.getTaskStatusId() != null) {
-            var st = statusRepo.findById(dto.getTaskStatusId()).orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
+            var st = statusRepo
+                    .findById(dto.getTaskStatusId())
+                    .orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
             task.setTaskStatus(st);
         }
         if (dto.getExecutorId() != null) {
             if (dto.getExecutorId() == 0L) {
                 task.setAssignee(null);
             } else {
-                var assignee = userRepo.findById(dto.getExecutorId()).orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
+                var assignee = userRepo
+                        .findById(dto.getExecutorId())
+                        .orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
                 task.setAssignee(assignee);
             }
         }
@@ -109,7 +116,8 @@ public class TaskService {
         }
         Set<Label> labels = new HashSet<>();
         for (Long id : labelIds) {
-            var lbl = labelRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Label not found: " + id));
+            var lbl = labelRepo.findById(id)
+                    .orElseThrow(() -> new NoSuchElementException("Label not found: " + id));
             labels.add(lbl);
         }
         task.setLabels(labels);
@@ -124,7 +132,8 @@ public class TaskService {
         dto.setDescription(t.getContent());
         dto.setExecutorId(t.getAssignee() == null ? null : t.getAssignee().getId());
         dto.setTaskStatusId(t.getTaskStatus() == null ? null : t.getTaskStatus().getId());
-        dto.setLabelIds(t.getLabels() == null ? List.of() : t.getLabels().stream().map(Label::getId).collect(Collectors.toList()));
+        dto.setLabelIds(t.getLabels() == null ? List.of() : t.getLabels().stream().map(Label::getId)
+                .collect(Collectors.toList()));
         return dto;
     }
 

@@ -20,7 +20,15 @@ import static org.hamcrest.Matchers.not;
 class UsersApiTest {
 
     @LocalServerPort
-    int port;
+    private int port;
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int value) {
+        this.port = value;
+    }
 
     @BeforeEach
     void setup() {
