@@ -121,8 +121,12 @@ class TaskServiceFiltersTest {
     }
 
     private void trySetPassword(User u, String raw) {
-        if (invokeSetter(u, "setPassword", raw)) return;
-        if (invokeSetter(u, "setPasswordDigest", raw)) return;
+        if (invokeSetter(u, "setPassword", raw)) {
+            return;
+        }
+        if (invokeSetter(u, "setPasswordDigest", raw)) {
+            return;
+        }
         invokeSetter(u, "setPasswordHash", raw);
     }
 
