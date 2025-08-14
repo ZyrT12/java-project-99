@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/task_statuses/**").authenticated()
                 .requestMatchers("/api/tasks/**").authenticated()
                 .requestMatchers("/api/labels/**").authenticated()
+                .requestMatchers("/api/users").permitAll()
                 .anyRequest().permitAll()
         );
 

@@ -4,6 +4,7 @@ import hexlet.code.dto.tasks.TaskCreateDto;
 import hexlet.code.dto.tasks.TaskResponseDto;
 import hexlet.code.dto.tasks.TaskUpdateDto;
 import hexlet.code.service.TaskService;
+import jakarta.validation.Valid;
 import jakarta.annotation.security.PermitAll;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -46,13 +47,13 @@ public class TasksController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TaskCreateDto body) {
+    public ResponseEntity<?> create(@Valid @RequestBody TaskCreateDto body) {
         var dto = service.create(body);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @PutMapping("/{id}")
-    public Object update(@PathVariable Long id, @RequestBody TaskUpdateDto body) {
+    public Object update(@PathVariable Long id, @Valid @RequestBody TaskUpdateDto body) {
         return service.update(id, body);
     }
 

@@ -1,40 +1,25 @@
 package hexlet.code.users;
 
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.core.IsNot.not;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("test")
-class UsersApiTest {
+public class UsersApiTest {
 
-    @LocalServerPort
-    private int port;
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int value) {
-        this.port = value;
-    }
-
-    @BeforeEach
-    void setup() {
+    @BeforeAll
+    static void setUp() {
         RestAssured.baseURI = "http://localhost";
-        RestAssured.port = port;
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        RestAssured.port = 8080;
     }
 
     @Test
@@ -42,8 +27,8 @@ class UsersApiTest {
         var id =
                 given().contentType("application/json")
                         .body("""
-                    {"email":"jack@google.com","firstName":"Jack","lastName":"Jons","password":"some-password"}
-                """)
+                            {"email":"jack@google.com","firstName":"Jack","lastName":"Jons","password":"some-password"}
+                            """)
                         .when().post("/api/users")
                         .then().statusCode(201)
                         .body("email", equalTo("jack@google.com"))
@@ -61,8 +46,8 @@ class UsersApiTest {
 
         given().contentType("application/json")
                 .body("""
-                {"email":"jack@yahoo.com","password":"new-password"}
-            """)
+                        {"email":"jack@yahoo.com","password":"new-password"}
+                      """)
                 .when().put("/api/users/" + id)
                 .then().statusCode(200)
                 .body("email", equalTo("jack@yahoo.com"));
@@ -70,18 +55,16 @@ class UsersApiTest {
         given().when().delete("/api/users/" + id)
                 .then().statusCode(204);
 
-        given().when().get("/api/users/" + id)
-                .then().statusCode(404);
+        given().when().get("/api/users/" + id).then().statusCode(404);
     }
 
     @Test
     void validation() {
         given().contentType("application/json")
                 .body("""
-                {"email":"not-email","password":"12"}
-            """)
+                        {"email":"not-email","password":"12"}
+                      """)
                 .when().post("/api/users")
-                .then().statusCode(400)
-                .log().all();
+                .then().statusCode(400);
     }
 }

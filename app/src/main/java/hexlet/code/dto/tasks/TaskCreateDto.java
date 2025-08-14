@@ -2,7 +2,12 @@ package hexlet.code.dto.tasks;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class TaskCreateDto {
+    @NotBlank
+    @Size(min = 1, max = 100)
     private String title;
     private String description;
     private Long executorId;

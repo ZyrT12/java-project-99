@@ -1,7 +1,7 @@
 package hexlet.code.controllers;
 
-import hexlet.code.dto.tasks.TaskStatusCreateDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hexlet.code.dto.tasks.TaskStatusCreateDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,22 +12,30 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class TaskStatusControllerTest {
 
-    @Autowired MockMvc mvc;
-    @Autowired ObjectMapper om;
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper om;
+
+    public MockMvc getMvc() {
+        return mvc;
+    }
+
+    public ObjectMapper getOm() {
+        return om;
+    }
 
     @Test
     void listIsPublic() throws Exception {
@@ -44,7 +52,7 @@ class TaskStatusControllerTest {
 
     @Test
     void createRequiresAuth() throws Exception {
-        var dto = new TaskStatusCreateDto();
+        TaskStatusCreateDto dto = new TaskStatusCreateDto();
         dto.setName("New");
         dto.setSlug("new");
         mvc.perform(post("/api/task_statuses")
@@ -56,7 +64,7 @@ class TaskStatusControllerTest {
     @Test
     @WithMockUser(username = "user")
     void createOk() throws Exception {
-        var dto = new TaskStatusCreateDto();
+        TaskStatusCreateDto dto = new TaskStatusCreateDto();
         dto.setName("New");
         dto.setSlug("new");
         mvc.perform(post("/api/task_statuses")
@@ -72,7 +80,7 @@ class TaskStatusControllerTest {
     @Test
     @WithMockUser(username = "user")
     void uniqueness() throws Exception {
-        var dto = new TaskStatusCreateDto();
+        TaskStatusCreateDto dto = new TaskStatusCreateDto();
         dto.setName("Unique");
         dto.setSlug("unique");
         mvc.perform(post("/api/task_statuses")
@@ -89,21 +97,20 @@ class TaskStatusControllerTest {
     @Test
     @WithMockUser(username = "user")
     void partialUpdate() throws Exception {
-        // создаём
-        var dto = new TaskStatusCreateDto();
+        TaskStatusCreateDto dto = new TaskStatusCreateDto();
         dto.setName("Old");
         dto.setSlug("old");
-        var create = mvc.perform(post("/api/task_statuses")
+        String created = mvc.perform(post("/api/task_statuses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andReturn();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        var id = om.readTree(create.getResponse().getContentAsString()).get("id").asLong();
+        long id = new ObjectMapper().readTree(created).get("id").asLong();
 
-        var patchJson = """
-            {"name": "Renamed"}
-            """;
+        String patchJson = "{\"name\":\"Renamed\"}";
         mvc.perform(put("/api/task_statuses/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(patchJson))
@@ -115,15 +122,18 @@ class TaskStatusControllerTest {
     @Test
     @WithMockUser(username = "user")
     void deleteOk() throws Exception {
-        var dto = new TaskStatusCreateDto();
+        TaskStatusCreateDto dto = new TaskStatusCreateDto();
         dto.setName("Tmp");
         dto.setSlug("tmp");
-        var create = mvc.perform(post("/api/task_statuses")
+        String created = mvc.perform(post("/api/task_statuses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andReturn();
-        var id = om.readTree(create.getResponse().getContentAsString()).get("id").asLong();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        long id = new ObjectMapper().readTree(created).get("id").asLong();
 
         mvc.perform(delete("/api/task_statuses/{id}", id))
                 .andExpect(status().isNoContent());
