@@ -1,15 +1,16 @@
 package hexlet.code.controllers;
 
-import hexlet.code.dto.tasks.TaskCreateDto;
 import hexlet.code.dto.tasks.TaskResponseDto;
-import hexlet.code.dto.tasks.TaskUpdateDto;
+import hexlet.code.dto.tasks.TaskUpsertDto;
+import hexlet.code.dto.tasks.OnCreate;
+import hexlet.code.dto.tasks.OnUpdate;
 import hexlet.code.service.TaskService;
-import jakarta.validation.Valid;
 import jakarta.annotation.security.PermitAll;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,13 +48,13 @@ public class TasksController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody TaskCreateDto body) {
+    public ResponseEntity<?> create(@Validated(OnCreate.class) @RequestBody TaskUpsertDto body) {
         var dto = service.create(body);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
     @PutMapping("/{id}")
-    public Object update(@PathVariable Long id, @Valid @RequestBody TaskUpdateDto body) {
+    public Object update(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody TaskUpsertDto body) {
         return service.update(id, body);
     }
 

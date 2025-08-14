@@ -1,23 +1,22 @@
 package hexlet.code.service;
 
-import hexlet.code.dto.tasks.TaskCreateDto;
 import hexlet.code.dto.tasks.TaskResponseDto;
-import hexlet.code.dto.tasks.TaskUpdateDto;
+import hexlet.code.dto.tasks.TaskUpsertDto;
 import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.transaction.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.stereotype.Service;
 import org.springframework.data.jpa.domain.Specification;
-import jakarta.persistence.criteria.JoinType;
+import org.springframework.stereotype.Service;
 
 @Service
 @Transactional
@@ -45,7 +44,7 @@ public class TaskService {
         return taskRepo.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
-    public TaskResponseDto create(TaskCreateDto dto) {
+    public TaskResponseDto create(TaskUpsertDto dto) {
         validateCreate(dto);
         var status = statusRepo.findById(dto.getTaskStatusId())
                 .orElseThrow(() -> new NoSuchElementException("Status not found: " + dto.getTaskStatusId()));
@@ -55,7 +54,7 @@ public class TaskService {
         task.setTaskStatus(status);
         if (dto.getExecutorId() != null) {
             var assignee = userRepo.findById(dto.getExecutorId())
-                .orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
+                    .orElseThrow(() -> new NoSuchElementException("Assignee not found: " + dto.getExecutorId()));
             task.setAssignee(assignee);
         }
         applyLabels(task, dto.getLabelIds());
@@ -63,7 +62,7 @@ public class TaskService {
         return toDto(saved);
     }
 
-    public TaskResponseDto update(Long id, TaskUpdateDto dto) {
+    public TaskResponseDto update(Long id, TaskUpsertDto dto) {
         var task = taskRepo.findById(id).orElseThrow(() -> new NoSuchElementException("Task not found: " + id));
         if (dto.getTitle() != null) {
             task.setTitle(dto.getTitle());
@@ -101,7 +100,7 @@ public class TaskService {
         taskRepo.deleteById(id);
     }
 
-    private void validateCreate(TaskCreateDto dto) {
+    private void validateCreate(TaskUpsertDto dto) {
         if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
             throw new IllegalArgumentException("title is required");
         }

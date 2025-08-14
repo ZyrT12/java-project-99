@@ -2,8 +2,7 @@ package hexlet.code.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hexlet.code.dto.tasks.TaskCreateDto;
-import hexlet.code.dto.tasks.TaskUpdateDto;
+import hexlet.code.dto.tasks.TaskUpsertDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -55,7 +54,7 @@ class TasksControllerTest {
         String statusBody = createdStatus.andReturn().getResponse().getContentAsString();
         Long statusId = om.readTree(statusBody).get("id").asLong();
 
-        TaskCreateDto createDto = new TaskCreateDto();
+        TaskUpsertDto createDto = new TaskUpsertDto();
         createDto.setTitle("First task");
         createDto.setDescription("Desc");
         createDto.setTaskStatusId(statusId);
@@ -80,7 +79,7 @@ class TasksControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()", greaterThanOrEqualTo(1)));
 
-        TaskUpdateDto updateDto = new TaskUpdateDto();
+        TaskUpsertDto updateDto = new TaskUpsertDto();
         updateDto.setTitle("Updated task");
         updateDto.setDescription("New desc");
         updateDto.setTaskStatusId(statusId);

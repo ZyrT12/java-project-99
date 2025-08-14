@@ -1,8 +1,12 @@
 package hexlet.code.dto.tasks;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
-public class TaskUpdateDto {
+public class TaskUpsertDto {
+    @NotBlank(groups = OnCreate.class)
+    @Size(min = 1, max = 100, groups = OnCreate.class)
     private String title;
     private String description;
     private Long executorId;

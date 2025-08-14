@@ -1,8 +1,7 @@
 package hexlet.code.service;
 
-import hexlet.code.dto.tasks.TaskCreateDto;
 import hexlet.code.dto.tasks.TaskResponseDto;
-import hexlet.code.dto.tasks.TaskUpdateDto;
+import hexlet.code.dto.tasks.TaskUpsertDto;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.repository.TaskStatusRepository;
 import java.util.List;
@@ -35,7 +34,7 @@ class TaskServiceTest {
 
     @Test
     void createUpdateList() {
-        TaskCreateDto createDto = new TaskCreateDto();
+        TaskUpsertDto createDto = new TaskUpsertDto();
         createDto.setTitle("ServiceTask");
         createDto.setDescription("Body");
         createDto.setTaskStatusId(statusId);
@@ -44,7 +43,7 @@ class TaskServiceTest {
         Assertions.assertEquals("ServiceTask", created.getTitle());
         Assertions.assertEquals(statusId, created.getTaskStatusId());
 
-        TaskUpdateDto updateDto = new TaskUpdateDto();
+        TaskUpsertDto updateDto = new TaskUpsertDto();
         updateDto.setTitle("ServiceTask2");
         updateDto.setDescription("Body2");
         updateDto.setTaskStatusId(statusId);

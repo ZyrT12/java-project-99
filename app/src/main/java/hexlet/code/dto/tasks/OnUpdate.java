@@ -1,0 +1,4 @@
+package hexlet.code.dto.tasks;
+
+public interface OnUpdate {
+}
