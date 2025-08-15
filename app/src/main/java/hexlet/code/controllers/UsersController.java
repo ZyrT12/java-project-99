@@ -1,15 +1,18 @@
 package hexlet.code.controllers;
 
 import hexlet.code.dto.users.UserCreateDto;
+import hexlet.code.dto.users.UserResponseDto;
 import hexlet.code.dto.users.UserUpdateDto;
-import hexlet.code.service.UserService;
-import jakarta.validation.ConstraintViolationException;
+import hexlet.code.model.User;
+import hexlet.code.repository.UserRepository;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,81 +23,72 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/users")
 public class UsersController {
-    private final UserService service;
 
-    public UsersController(UserService service) {
-        this.service = service;
+    private final UserRepository repository;
+
+    public UsersController(UserRepository repository) {
+        this.repository = repository;
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Valid @RequestBody UserCreateDto dto) {
-        try {
-            var created = service.create(dto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
-        } catch (ConstraintViolationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(java.util.Map.of("error", msgOr("validation error", e.getMessage())));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(java.util.Map.of("error", msgOr("bad request", e.getMessage())));
-        }
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getOne(@PathVariable("id") long id) {
-        try {
-            var dto = service.get(id);
-            return ResponseEntity.ok(dto);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    public ResponseEntity<UserResponseDto> create(@Valid @RequestBody UserCreateDto dto) {
+        User user = new User();
+        user.setEmail(dto.email());
+        user.setFirstName(dto.firstName());
+        user.setLastName(dto.lastName());
+        user.setPasswordHash(BCrypt.hashpw(dto.password(), BCrypt.gensalt()));
+        User saved = repository.save(user);
+        return ResponseEntity.created(URI.create("/api/users/" + saved.getId()))
+                .body(toDto(saved));
     }
 
     @GetMapping
-    public ResponseEntity<?> list() {
-        return ResponseEntity.ok(service.list());
+    public ResponseEntity<List<UserResponseDto>> list() {
+        return ResponseEntity.ok(repository.findAll().stream().map(this::toDto).toList());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDto> getOne(@PathVariable Long id) {
+        Optional<User> opt = repository.findById(id);
+        return opt.map(u -> ResponseEntity.ok(toDto(u)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updatePut(@PathVariable("id") long id,
-                                       @Valid @RequestBody UserUpdateDto dto) {
-        return doUpdate(id, dto);
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> updatePatch(@PathVariable("id") long id,
-                                         @Valid @RequestBody UserUpdateDto dto) {
-        return doUpdate(id, dto);
-    }
-
-    private ResponseEntity<?> doUpdate(long id, UserUpdateDto dto) {
-        try {
-            var updated = service.update(id, dto);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            var msg = e.getMessage();
-            if ("not found".equals(msg)) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(java.util.Map.of("error", msgOr("bad request", msg)));
-        } catch (ConstraintViolationException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(java.util.Map.of("error", msgOr("validation error", e.getMessage())));
+    public ResponseEntity<UserResponseDto> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto) {
+        Optional<User> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
+        User user = opt.get();
+        if (dto.email() != null && !dto.email().isBlank()) {
+            user.setEmail(dto.email());
+        }
+        if (dto.firstName() != null) {
+            user.setFirstName(dto.firstName());
+        }
+        if (dto.lastName() != null) {
+            user.setLastName(dto.lastName());
+        }
+        if (dto.password() != null && !dto.password().isBlank()) {
+            user.setPasswordHash(BCrypt.hashpw(dto.password(), BCrypt.gensalt()));
+        }
+        User saved = repository.save(user);
+        return ResponseEntity.ok(toDto(saved));
     }
+
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") long id) {
-        try {
-            service.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        Optional<User> opt = repository.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
+        repository.delete(opt.get());
+        return ResponseEntity.noContent().build();
     }
 
-    private static String msgOr(String fallback, String msg) {
-        return (msg == null || msg.isBlank()) ? fallback : msg;
+    private UserResponseDto toDto(User u) {
+        return new UserResponseDto(u.getId(), u.getEmail(), u.getFirstName(), u.getLastName(), u.getCreatedAt());
     }
 }

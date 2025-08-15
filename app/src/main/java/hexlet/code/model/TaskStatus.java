@@ -8,18 +8,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import jakarta.persistence.UniqueConstraint;
-import jakarta.persistence.PrePersist;
 import java.time.LocalDate;
 
 @Entity
-@Table(
-        name = "task_statuses",
-        uniqueConstraints = {
-            @UniqueConstraint(name = "uk_task_status_name", columnNames = "name"),
-            @UniqueConstraint(name = "uk_task_status_slug", columnNames = "slug")
-        }
-)
+@Table(name = "task_statuses")
 public class TaskStatus {
 
     @Id
@@ -27,24 +19,17 @@ public class TaskStatus {
     private Long id;
 
     @NotBlank
-    @Size(min = 1)
-    @Column(nullable = false, unique = true)
+    @Size(min = 2, max = 255)
+    @Column(nullable = false, length = 255, unique = true)
     private String name;
 
     @NotBlank
-    @Size(min = 1)
-    @Column(nullable = false, unique = true)
+    @Size(min = 2, max = 255)
+    @Column(nullable = false, length = 255, unique = true)
     private String slug;
 
-    @Column(nullable = false)
-    private LocalDate createdAt;
-
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) {
-            createdAt = LocalDate.now();
-        }
-    }
+    @Column(name = "created_at", nullable = false)
+    private LocalDate createdAt = LocalDate.now();
 
     public TaskStatus() {
     }
@@ -68,6 +53,10 @@ public class TaskStatus {
 
     public LocalDate getCreatedAt() {
         return createdAt;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public void setName(String name) {

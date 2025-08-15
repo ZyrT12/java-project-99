@@ -2,15 +2,12 @@ package hexlet.code.controllers;
 
 import hexlet.code.dto.tasks.TaskResponseDto;
 import hexlet.code.dto.tasks.TaskUpsertDto;
-import hexlet.code.dto.tasks.OnCreate;
-import hexlet.code.dto.tasks.OnUpdate;
 import hexlet.code.service.TaskService;
-import jakarta.annotation.security.PermitAll;
+import jakarta.validation.Valid;
+import java.net.URI;
 import java.util.List;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +16,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -34,33 +30,34 @@ public class TasksController {
     }
 
     @GetMapping("/{id}")
-    public Object getOne(@PathVariable Long id) {
+    public TaskResponseDto getOne(@PathVariable Long id) {
         return service.get(id);
     }
 
-    @PermitAll
     @GetMapping
     public List<TaskResponseDto> list(@RequestParam(value = "titleCont", required = false) String titleCont,
                                       @RequestParam(value = "assigneeId", required = false) Long assigneeId,
-                                      @RequestParam(value = "status", required = false) String status,
+                                      @RequestParam(value = "status", required = false) String statusSlug,
                                       @RequestParam(value = "labelId", required = false) Long labelId) {
-        return service.list(titleCont, assigneeId, status, labelId);
+        return service.list(titleCont, assigneeId, statusSlug, labelId);
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@Validated(OnCreate.class) @RequestBody TaskUpsertDto body) {
-        var dto = service.create(body);
-        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskUpsertDto dto) {
+        TaskResponseDto saved = service.create(dto);
+        URI location = URI.create("/api/tasks/" + saved.getId());
+        return ResponseEntity.created(location).body(saved);
     }
 
     @PutMapping("/{id}")
-    public Object update(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody TaskUpsertDto body) {
-        return service.update(id, body);
+    public ResponseEntity<TaskResponseDto> update(@PathVariable Long id, @Valid @RequestBody TaskUpsertDto dto) {
+        TaskResponseDto saved = service.update(id, dto);
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

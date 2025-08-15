@@ -3,11 +3,14 @@ package hexlet.code.dto.tasks;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class TaskStatusCreateDto {
-    @NotBlank @Size(min = 1)
+public class TaskStatusUpsertDto {
+
+    @NotBlank(groups = {OnCreate.class, OnUpdate.class})
+    @Size(min = 2, max = 255, groups = {OnCreate.class, OnUpdate.class})
     private String name;
 
-    @NotBlank @Size(min = 1)
+    @NotBlank(groups = {OnCreate.class, OnUpdate.class})
+    @Size(min = 2, max = 255, groups = {OnCreate.class, OnUpdate.class})
     private String slug;
 
     public String getName() {
@@ -26,4 +29,3 @@ public class TaskStatusCreateDto {
         this.slug = slug;
     }
 }
-

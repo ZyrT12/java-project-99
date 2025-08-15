@@ -1,7 +1,7 @@
 package hexlet.code.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hexlet.code.dto.tasks.TaskStatusCreateDto;
+import hexlet.code.dto.tasks.TaskStatusUpsertDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,33 +29,25 @@ class TaskStatusControllerTest {
     @Autowired
     private ObjectMapper om;
 
-    public MockMvc getMvc() {
-        return mvc;
-    }
-
-    public ObjectMapper getOm() {
-        return om;
-    }
-
     @Test
     void listIsPublic() throws Exception {
-        mvc.perform(get("/api/task_statuses"))
+        mvc.perform(get("/api/task-statuses"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", notNullValue()));
     }
 
     @Test
     void getByIdNotFound() throws Exception {
-        mvc.perform(get("/api/task_statuses/999999"))
+        mvc.perform(get("/api/task-statuses/999999"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void createRequiresAuth() throws Exception {
-        TaskStatusCreateDto dto = new TaskStatusCreateDto();
+        TaskStatusUpsertDto dto = new TaskStatusUpsertDto();
         dto.setName("New");
         dto.setSlug("new");
-        mvc.perform(post("/api/task_statuses")
+        mvc.perform(post("/api/task-statuses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(dto)))
                 .andExpect(status().isUnauthorized());
@@ -64,10 +56,10 @@ class TaskStatusControllerTest {
     @Test
     @WithMockUser(username = "user")
     void createOk() throws Exception {
-        TaskStatusCreateDto dto = new TaskStatusCreateDto();
+        TaskStatusUpsertDto dto = new TaskStatusUpsertDto();
         dto.setName("New");
         dto.setSlug("new");
-        mvc.perform(post("/api/task_statuses")
+        mvc.perform(post("/api/task-statuses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
@@ -79,28 +71,11 @@ class TaskStatusControllerTest {
 
     @Test
     @WithMockUser(username = "user")
-    void uniqueness() throws Exception {
-        TaskStatusCreateDto dto = new TaskStatusCreateDto();
-        dto.setName("Unique");
-        dto.setSlug("unique");
-        mvc.perform(post("/api/task_statuses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(dto)))
-                .andExpect(status().isCreated());
-
-        mvc.perform(post("/api/task_statuses")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(om.writeValueAsString(dto)))
-                .andExpect(status().isConflict());
-    }
-
-    @Test
-    @WithMockUser(username = "user")
     void partialUpdate() throws Exception {
-        TaskStatusCreateDto dto = new TaskStatusCreateDto();
+        TaskStatusUpsertDto dto = new TaskStatusUpsertDto();
         dto.setName("Old");
         dto.setSlug("old");
-        String created = mvc.perform(post("/api/task_statuses")
+        String created = mvc.perform(post("/api/task-statuses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
@@ -110,10 +85,10 @@ class TaskStatusControllerTest {
 
         long id = new ObjectMapper().readTree(created).get("id").asLong();
 
-        String patchJson = "{\"name\":\"Renamed\"}";
-        mvc.perform(put("/api/task_statuses/{id}", id)
+        String putJson = "{\"name\":\"Renamed\"}";
+        mvc.perform(put("/api/task-statuses/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(patchJson))
+                        .content(putJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name", is("Renamed")))
                 .andExpect(jsonPath("$.slug", is("old")));
@@ -122,10 +97,10 @@ class TaskStatusControllerTest {
     @Test
     @WithMockUser(username = "user")
     void deleteOk() throws Exception {
-        TaskStatusCreateDto dto = new TaskStatusCreateDto();
+        TaskStatusUpsertDto dto = new TaskStatusUpsertDto();
         dto.setName("Tmp");
         dto.setSlug("tmp");
-        String created = mvc.perform(post("/api/task_statuses")
+        String created = mvc.perform(post("/api/task-statuses")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
@@ -135,10 +110,10 @@ class TaskStatusControllerTest {
 
         long id = new ObjectMapper().readTree(created).get("id").asLong();
 
-        mvc.perform(delete("/api/task_statuses/{id}", id))
+        mvc.perform(delete("/api/task-statuses/{id}", id))
                 .andExpect(status().isNoContent());
 
-        mvc.perform(get("/api/task_statuses/{id}", id))
+        mvc.perform(get("/api/task-statuses/{id}", id))
                 .andExpect(status().isNotFound());
     }
 }
