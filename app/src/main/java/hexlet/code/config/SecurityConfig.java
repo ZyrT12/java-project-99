@@ -31,6 +31,7 @@ public class SecurityConfig {
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         http.authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.GET,
                         "/",
                         "/index.html",
@@ -41,7 +42,9 @@ public class SecurityConfig {
                         "/v3/api-docs/**",
                         "/api/task-statuses/**",
                         "/api/task_statuses/**",
-                        "/api/users/**"
+                        "/api/users/**",
+                        "/api/labels/**",
+                        "/api/tasks/**"
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/login", "/login", "/api/users/**").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").permitAll()

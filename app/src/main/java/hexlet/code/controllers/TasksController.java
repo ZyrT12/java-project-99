@@ -37,10 +37,7 @@ public class TasksController {
             @RequestParam(name = "status", required = false) String status,
             @RequestParam(name = "labelId", required = false) Long labelId,
             @RequestParam(name = "_start", required = false) Integer start,
-            @RequestParam(name = "_end", required = false) Integer end,
-            @RequestParam(name = "_sort", required = false) String sort,
-            @RequestParam(name = "_order", required = false) String order,
-            @RequestParam(name = "filter", required = false) String filter
+            @RequestParam(name = "_end", required = false) Integer end
     ) {
         String effectiveStatus = (statusSlug != null && !statusSlug.isBlank())
                 ? statusSlug

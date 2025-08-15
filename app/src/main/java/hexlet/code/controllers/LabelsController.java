@@ -27,21 +27,19 @@ public class LabelsController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LabelDto>> getAll(
-            @RequestParam(name = "_start", required = false) Integer start,
-            @RequestParam(name = "_end", required = false) Integer end,
-            @RequestParam(name = "_sort", required = false) String sort,
-            @RequestParam(name = "_order", required = false) String order,
-            @RequestParam(name = "filter", required = false) String filter
+    public ResponseEntity<java.util.List<hexlet.code.dto.labels.LabelDto>> getAll(
+            @org.springframework.web.bind.annotation.RequestParam(name = "_start", required = false) Integer start,
+            @org.springframework.web.bind.annotation.RequestParam(name = "_end", required = false) Integer end
     ) {
-        List<LabelDto> all = service.getAll();
+        java.util.List<hexlet.code.dto.labels.LabelDto> all = service.getAll();
         int total = all.size();
         int from = start != null ? Math.max(0, start) : 0;
         int to = end != null ? Math.min(total, end) : total;
-        List<LabelDto> page = all.subList(from, to);
-        HttpHeaders headers = new HttpHeaders();
+        java.util.List<hexlet.code.dto.labels.LabelDto> page = all.subList(from, to);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(total));
-        return ResponseEntity.ok().headers(headers).body(page);
+        return org.springframework.http.ResponseEntity.ok().headers(headers).body(page);
     }
 
     @PostMapping
