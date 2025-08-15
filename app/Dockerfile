@@ -13,8 +13,13 @@ RUN ./gradlew --no-daemon clean installDist
 
 FROM eclipse-temurin:21-jre
 WORKDIR /opt/app
+
 ARG APP_NAME=app
+
 COPY --from=builder /project/build/install/${APP_NAME}/ /opt/app/
+
+ENV SPRING_PROFILES_ACTIVE=prod
 ENV PORT=8080
 EXPOSE 8080
-CMD ["/opt/app/bin/app"]
+
+CMD ["/opt/app/bin/app", "-Dserver.port=${PORT}"]
