@@ -42,9 +42,7 @@ public class SecurityConfig {
                         "/v3/api-docs/**",
                         "/api/task-statuses/**",
                         "/api/task_statuses/**",
-                        "/api/users/**",
-                        "/api/labels/**",
-                        "/api/tasks/**"
+                        "/api/users/**"
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/login", "/login", "/api/users/**").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").permitAll()

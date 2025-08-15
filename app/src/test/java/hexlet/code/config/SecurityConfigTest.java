@@ -28,4 +28,10 @@ class SecurityConfigTest {
         assertEquals(HttpStatus.OK, r1.getStatusCode());
         assertEquals(HttpStatus.OK, r2.getStatusCode());
     }
+
+    @Test
+    void protectedEndpointsRequireAuth() {
+        ResponseEntity<String> r = rest.getForEntity("http://localhost:" + port + "/api/tasks", String.class);
+        assertEquals(HttpStatus.UNAUTHORIZED, r.getStatusCode());
+    }
 }
