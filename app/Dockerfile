@@ -1,21 +1,20 @@
+# app/Dockerfile
 FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /project
 
 COPY gradlew ./gradlew
 COPY gradle ./gradle
-COPY settings.gradle.kts ./
-COPY app/build.gradle.kts app/build.gradle.kts
-
-COPY app ./app
+COPY settings.gradle.kts ./settings.gradle.kts
+COPY build.gradle.kts ./build.gradle.kts
+COPY src ./src
 
 RUN chmod +x ./gradlew
-RUN ./gradlew :app:clean :app:installDist --no-daemon
+RUN ./gradlew --no-daemon clean installDist
 
-# ---- runtime stage
 FROM eclipse-temurin:21-jre
 WORKDIR /opt/app
-COPY --from=builder /project/app/build/install/app /opt/app
-
+ARG APP_NAME=app
+COPY --from=builder /project/build/install/${APP_NAME}/ /opt/app/
 ENV PORT=8080
 EXPOSE 8080
 CMD ["/opt/app/bin/app"]

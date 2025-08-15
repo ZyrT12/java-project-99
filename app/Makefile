@@ -1,4 +1,5 @@
-# Makefile
+# app/Makefile
+
 run-dist:
 	./build/install/app/bin/app
 
@@ -9,7 +10,7 @@ build:
 	./gradlew clean build
 
 install:
-	./gradlew clean install
+	./gradlew clean installDist
 
 run:
 	./gradlew run
@@ -20,6 +21,12 @@ report:
 lint:
 	./gradlew checkstyleMain
 
-build-run: build run
+setup:
+	./gradlew wrapper --gradle-version 8.13
+	./gradlew clean build installDist
 
-.PHONY: run-dist clean build install run report lint build-run
+build-run:
+	make build
+	make run
+
+.PHONY: run-dist clean build install run report lint setup build-run

@@ -20,3 +20,6 @@ report:
 lint:
 	make -C app lint
 
+setup:
+	make -C app setup
+
