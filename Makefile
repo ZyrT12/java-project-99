@@ -1,29 +1,25 @@
-run-dist: install
-	./app/build/install/app/bin/app
+# Makefile
+run-dist:
+	make -C app run-dist
 
 clean:
-	cd app && ./gradlew clean
+	make -C app clean
 
 build:
-	cd app && ./gradlew clean build
+	make -C app build
 
 install:
-	cd app && ./gradlew clean installDist
+	make -C app install
 
 run:
-	cd app && ./gradlew run
+	make -C app run
 
 report:
-	cd app && ./gradlew jacocoTestReport
+	make -C app report
 
 lint:
-	cd app && ./gradlew checkstyleMain
+	make -C app lint
 
 setup:
-	cd app && chmod +x gradlew && ./gradlew wrapper --gradle-version 8.13 && ./gradlew clean build installDist
+	make -C app setup
 
-build-run:
-	$(MAKE) build
-	$(MAKE) run
-
-.PHONY: run-dist clean build install run report lint setup build-run
