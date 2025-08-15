@@ -6,9 +6,10 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
+    open-in-view: false
+    show-sql: false
 
   flyway:
     enabled: true
@@ -16,3 +17,7 @@ spring:
 
 server:
   port: ${PORT:8080}
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:change-me}

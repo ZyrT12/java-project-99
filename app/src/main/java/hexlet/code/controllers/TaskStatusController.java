@@ -30,27 +30,30 @@ public class TaskStatusController {
         this.service = service;
     }
 
-    @PostMapping
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatus> create(@Validated(OnCreate.class) @RequestBody TaskStatusUpsertDto dto) {
-        TaskStatus created = service.create(dto);
-        return ResponseEntity.created(URI.create("/api/task-statuses/" + created.getId())).body(created);
-    }
-
     @GetMapping
-    public ResponseEntity<List<TaskStatus>> list() {
-        return ResponseEntity.ok(service.list());
+    public List<TaskStatus> index() {
+        return service.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TaskStatus> getOne(@PathVariable Long id) {
-        return ResponseEntity.ok(service.get(id));
+    public ResponseEntity<TaskStatus> show(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(service.findById(id));
+        } catch (jakarta.persistence.EntityNotFoundException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TaskStatus> create(@Validated(OnCreate.class) @RequestBody TaskStatusUpsertDto dto) {
+        TaskStatus saved = service.create(dto);
+        return ResponseEntity.created(URI.create("/api/task-statuses/" + saved.getId())).body(saved);
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatus> partialUpdate(@PathVariable Long id,
-                                                    @Validated(OnUpdate.class) @RequestBody TaskStatusUpsertDto dto) {
+    public ResponseEntity<TaskStatus> patch(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus updated = service.updatePartial(id, dto);
         return ResponseEntity.ok(updated);
     }

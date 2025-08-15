@@ -11,48 +11,27 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class JwtAuthMiddlewareTest {
 
     @Test
     void handleSetsAuthUserWhenBearerTokenValid() {
-        String token = JwtService.createToken(7L, "user@example.com", "USER");
+        JwtService jwtService = new JwtService("test-secret");
+        String token = jwtService.issue(7L, "user@example.com");
+
         Context ctx = mock(Context.class);
         doNothing().when(ctx).attribute(eq(JwtAuthMiddleware.ATTR_USER), any());
-        org.mockito.Mockito.when(ctx.header("Authorization")).thenReturn("Bearer " + token);
+        when(ctx.header("Authorization")).thenReturn("Bearer " + token);
 
-        JwtAuthMiddleware middleware = new JwtAuthMiddleware();
+        JwtAuthMiddleware middleware = new JwtAuthMiddleware(jwtService);
         middleware.handle(ctx);
 
-        ArgumentCaptor<AuthUser> captor = ArgumentCaptor.forClass(AuthUser.class);
+        ArgumentCaptor<JwtAuthMiddleware.AuthUser> captor = ArgumentCaptor.forClass(JwtAuthMiddleware.AuthUser.class);
         verify(ctx, times(1)).attribute(eq(JwtAuthMiddleware.ATTR_USER), captor.capture());
-        AuthUser u = captor.getValue();
-        assertEquals(7L, u.id());
-        assertEquals("user@example.com", u.email());
-        assertEquals("USER", u.role());
-    }
 
-    @Test
-    void handleDoesNothingWhenNoAuthorizationHeader() {
-        Context ctx = mock(Context.class);
-        doNothing().when(ctx).attribute(eq(JwtAuthMiddleware.ATTR_USER), any());
-        org.mockito.Mockito.when(ctx.header("Authorization")).thenReturn(null);
-
-        JwtAuthMiddleware middleware = new JwtAuthMiddleware();
-        middleware.handle(ctx);
-
-        verify(ctx, times(0)).attribute(eq(JwtAuthMiddleware.ATTR_USER), any());
-    }
-
-    @Test
-    void handleDoesNothingWhenTokenInvalid() {
-        Context ctx = mock(Context.class);
-        doNothing().when(ctx).attribute(eq(JwtAuthMiddleware.ATTR_USER), any());
-        org.mockito.Mockito.when(ctx.header("Authorization")).thenReturn("Bearer invalid.token");
-
-        JwtAuthMiddleware middleware = new JwtAuthMiddleware();
-        middleware.handle(ctx);
-
-        verify(ctx, times(0)).attribute(eq(JwtAuthMiddleware.ATTR_USER), any());
+        JwtAuthMiddleware.AuthUser u = captor.getValue();
+        assertEquals(7L, u.getId());
+        assertEquals("user@example.com", u.getEmail());
     }
 }

@@ -29,24 +29,38 @@ public class TasksController {
         this.service = service;
     }
 
-    @GetMapping("/{id}")
-    public TaskResponseDto getOne(@PathVariable Long id) {
-        return service.get(id);
+    @GetMapping
+    public List<TaskResponseDto> index(
+            @RequestParam(name = "titleCont", required = false) String titleCont,
+            @RequestParam(name = "assigneeId", required = false) Long assigneeId,
+            @RequestParam(name = "statusSlug", required = false) String statusSlug,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "labelId", required = false) Long labelId
+    ) {
+        String effectiveStatus = (statusSlug != null && !statusSlug.isBlank())
+                ? statusSlug
+                : (status != null && !status.isBlank() ? status : null);
+
+        boolean hasAnyFilter = (titleCont != null && !titleCont.isBlank())
+                || assigneeId != null
+                || effectiveStatus != null
+                || labelId != null;
+
+        if (hasAnyFilter) {
+            return service.list(titleCont, assigneeId, effectiveStatus, labelId);
+        }
+        return service.list();
     }
 
-    @GetMapping
-    public List<TaskResponseDto> list(@RequestParam(value = "titleCont", required = false) String titleCont,
-                                      @RequestParam(value = "assigneeId", required = false) Long assigneeId,
-                                      @RequestParam(value = "status", required = false) String statusSlug,
-                                      @RequestParam(value = "labelId", required = false) Long labelId) {
-        return service.list(titleCont, assigneeId, statusSlug, labelId);
+    @GetMapping("/{id}")
+    public TaskResponseDto show(@PathVariable Long id) {
+        return service.get(id);
     }
 
     @PostMapping
     public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskUpsertDto dto) {
         TaskResponseDto saved = service.create(dto);
-        URI location = URI.create("/api/tasks/" + saved.getId());
-        return ResponseEntity.created(location).body(saved);
+        return ResponseEntity.created(URI.create("/api/tasks/" + saved.getId())).body(saved);
     }
 
     @PutMapping("/{id}")

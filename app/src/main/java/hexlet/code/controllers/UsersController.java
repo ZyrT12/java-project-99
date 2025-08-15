@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,53 +31,56 @@ public class UsersController {
         this.repository = repository;
     }
 
-    @PostMapping
-    public ResponseEntity<UserResponseDto> create(@Valid @RequestBody UserCreateDto dto) {
-        User user = new User();
-        user.setEmail(dto.email());
-        user.setFirstName(dto.firstName());
-        user.setLastName(dto.lastName());
-        user.setPasswordHash(BCrypt.hashpw(dto.password(), BCrypt.gensalt()));
-        User saved = repository.save(user);
-        return ResponseEntity.created(URI.create("/api/users/" + saved.getId()))
-                .body(toDto(saved));
-    }
-
     @GetMapping
-    public ResponseEntity<List<UserResponseDto>> list() {
-        return ResponseEntity.ok(repository.findAll().stream().map(this::toDto).toList());
+    public List<UserResponseDto> index() {
+        return repository.findAll().stream().map(this::toDto).toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getOne(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDto> show(@PathVariable Long id) {
         Optional<User> opt = repository.findById(id);
-        return opt.map(u -> ResponseEntity.ok(toDto(u)))
+        return opt.map(user -> ResponseEntity.ok(toDto(user)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponseDto> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto) {
+    @PostMapping
+    public ResponseEntity<UserResponseDto> create(@Valid @RequestBody UserCreateDto dto) {
+        User u = new User();
+        u.setEmail(dto.email());
+        u.setFirstName(dto.firstName());
+        u.setLastName(dto.lastName());
+        u.setPasswordHash(BCrypt.hashpw(dto.password(), BCrypt.gensalt()));
+        User saved = repository.save(u);
+        return ResponseEntity.created(URI.create("/api/users/" + saved.getId())).body(toDto(saved));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserResponseDto> patch(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto) {
         Optional<User> opt = repository.findById(id);
         if (opt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        User user = opt.get();
-        if (dto.email() != null && !dto.email().isBlank()) {
-            user.setEmail(dto.email());
+        User u = opt.get();
+        if (dto.email() != null) {
+            u.setEmail(dto.email());
         }
         if (dto.firstName() != null) {
-            user.setFirstName(dto.firstName());
+            u.setFirstName(dto.firstName());
         }
         if (dto.lastName() != null) {
-            user.setLastName(dto.lastName());
+            u.setLastName(dto.lastName());
         }
-        if (dto.password() != null && !dto.password().isBlank()) {
-            user.setPasswordHash(BCrypt.hashpw(dto.password(), BCrypt.gensalt()));
+        if (dto.password() != null) {
+            u.setPasswordHash(BCrypt.hashpw(dto.password(), BCrypt.gensalt()));
         }
-        User saved = repository.save(user);
+        User saved = repository.save(u);
         return ResponseEntity.ok(toDto(saved));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDto> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto) {
+        return patch(id, dto);
+    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

@@ -1,96 +1,83 @@
 package hexlet.code.controllers;
 
-import at.favre.lib.crypto.bcrypt.BCrypt;
+import hexlet.code.dto.auth.LoginRequest;
+import hexlet.code.dto.auth.LoginResponse;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
-import io.javalin.http.Context;
-import io.javalin.http.UnauthorizedResponse;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.lang.reflect.Field;
-import java.util.Map;
+import hexlet.code.security.JwtService;
 import java.util.Optional;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AuthControllerTest {
 
-    private static void setId(User user, Long id) {
-        try {
-            Field f = User.class.getDeclaredField("id");
-            f.setAccessible(true);
-            f.set(user, id);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @Test
     void loginOk() {
-        String email = "user@example.com";
-        String raw = "secret123";
-        String hash = BCrypt.withDefaults().hashToString(10, raw.toCharArray());
+        UserRepository repo = mock(UserRepository.class);
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        JwtService jwt = new JwtService("test-secret");
 
         User u = new User();
-        setId(u, 1L);
-        u.setEmail(email);
-        u.setPasswordHash(hash);
+        u.setEmail("jack@example.com");
+        u.setPasswordHash(encoder.encode("qwerty"));
+        when(repo.findByEmail("jack@example.com")).thenReturn(Optional.of(u));
 
-        UserRepository repo = mock(UserRepository.class);
-        when(repo.findByEmail(email)).thenReturn(Optional.of(u));
+        AuthController controller = new AuthController(repo, encoder, jwt);
 
-        Context ctx = mock(Context.class);
-        when(ctx.bodyAsClass(Map.class)).thenReturn(Map.of("username", email, "password", raw));
-        doReturn(ctx).when(ctx).result(anyString());
+        LoginRequest req = new LoginRequest();
+        req.setUsername("jack@example.com");
+        req.setPassword("qwerty");
 
-        AuthController controller = new AuthController(repo);
-        controller.login(ctx);
-
-        ArgumentCaptor<String> tokenCaptor = ArgumentCaptor.forClass(String.class);
-        verify(ctx).result(tokenCaptor.capture());
-        String token = tokenCaptor.getValue();
-        assertNotNull(token);
+        ResponseEntity<LoginResponse> resp = controller.login(req);
+        assertEquals(HttpStatus.OK, resp.getStatusCode());
+        assertNotNull(resp.getBody());
+        assertNotNull(resp.getBody().getToken());
     }
 
     @Test
     void loginWrongPassword() {
-        String email = "user@example.com";
-        String good = "secret123";
-        String bad = "wrong";
-        String hash = BCrypt.withDefaults().hashToString(10, good.toCharArray());
+        UserRepository repo = mock(UserRepository.class);
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        JwtService jwt = new JwtService("test-secret");
 
         User u = new User();
-        setId(u, 2L);
-        u.setEmail(email);
-        u.setPasswordHash(hash);
+        u.setEmail("jack@example.com");
+        u.setPasswordHash(encoder.encode("qwerty"));
+        when(repo.findByEmail("jack@example.com")).thenReturn(Optional.of(u));
 
-        UserRepository repo = mock(UserRepository.class);
-        when(repo.findByEmail(email)).thenReturn(Optional.of(u));
+        AuthController controller = new AuthController(repo, encoder, jwt);
 
-        Context ctx = mock(Context.class);
-        when(ctx.bodyAsClass(Map.class)).thenReturn(Map.of("username", email, "password", bad));
+        LoginRequest req = new LoginRequest();
+        req.setUsername("jack@example.com");
+        req.setPassword("wrong");
 
-        AuthController controller = new AuthController(repo);
-        assertThrows(UnauthorizedResponse.class, () -> controller.login(ctx));
+        assertThrows(ResponseStatusException.class, () -> controller.login(req));
     }
 
     @Test
     void loginUserNotFound() {
-        String email = "absent@example.com";
         UserRepository repo = mock(UserRepository.class);
-        when(repo.findByEmail(email)).thenReturn(Optional.empty());
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        JwtService jwt = new JwtService("test-secret");
 
-        Context ctx = mock(Context.class);
-        when(ctx.bodyAsClass(Map.class)).thenReturn(Map.of("username", email, "password", "x"));
+        when(repo.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
 
-        AuthController controller = new AuthController(repo);
-        assertThrows(UnauthorizedResponse.class, () -> controller.login(ctx));
+        AuthController controller = new AuthController(repo, encoder, jwt);
+
+        LoginRequest req = new LoginRequest();
+        req.setUsername("unknown@example.com");
+        req.setPassword("any");
+
+        assertThrows(ResponseStatusException.class, () -> controller.login(req));
     }
 }

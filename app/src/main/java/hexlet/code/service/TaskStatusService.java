@@ -18,21 +18,19 @@ public class TaskStatusService {
         this.repository = repository;
     }
 
-    public TaskStatus create(TaskStatusUpsertDto dto) {
-        TaskStatus ts = new TaskStatus();
-        ts.setName(dto.getName());
-        ts.setSlug(dto.getSlug());
-        return repository.save(ts);
+    public List<TaskStatus> findAll() {
+        return repository.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public TaskStatus get(Long id) {
+    public TaskStatus findById(Long id) {
         return repository.findById(id).orElseThrow(EntityNotFoundException::new);
     }
 
-    @Transactional(readOnly = true)
-    public List<TaskStatus> list() {
-        return repository.findAll();
+    public TaskStatus create(TaskStatusUpsertDto dto) {
+        TaskStatus entity = new TaskStatus();
+        entity.setName(dto.getName());
+        entity.setSlug(dto.getSlug());
+        return repository.save(entity);
     }
 
     public TaskStatus updatePartial(Long id, TaskStatusUpsertDto dto) {

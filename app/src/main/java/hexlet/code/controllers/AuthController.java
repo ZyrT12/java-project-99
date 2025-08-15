@@ -1,40 +1,38 @@
 package hexlet.code.controllers;
 
-import at.favre.lib.crypto.bcrypt.BCrypt;
-import io.javalin.http.BadRequestResponse;
-import io.javalin.http.Context;
-import io.javalin.http.UnauthorizedResponse;
+import hexlet.code.dto.auth.LoginRequest;
+import hexlet.code.dto.auth.LoginResponse;
+import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
 import hexlet.code.security.JwtService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
-
-public final class AuthController {
+@RestController
+public class AuthController {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthController(UserRepository userRepository) {
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
-    public void login(Context ctx) {
-        var body = ctx.bodyAsClass(Map.class);
-        var username = (String) body.get("username");
-        var password = (String) body.get("password");
-
-        if (username == null || password == null) {
-            throw new BadRequestResponse("username and password are required");
+    @PostMapping({"/api/login", "/login"})
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        User user = userRepository.findByEmail(request.getUsername())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
-
-        var user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UnauthorizedResponse("Invalid credentials"));
-
-        var hash = user.getPasswordHash();
-        var ok = BCrypt.verifyer().verify(password.toCharArray(), hash).verified;
-        if (!ok) {
-            throw new UnauthorizedResponse("Invalid credentials");
-        }
-
-        var token = JwtService.createToken(user.getId(), user.getEmail(), "USER");
-        ctx.result(token);
+        String token = jwtService.issue(user.getId(), user.getEmail());
+        return ResponseEntity.ok(new LoginResponse(token));
     }
 }
