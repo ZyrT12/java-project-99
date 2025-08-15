@@ -6,6 +6,8 @@ import hexlet.code.service.TaskService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,7 +32,7 @@ public class TasksController {
     }
 
     @GetMapping
-    public List<TaskResponseDto> index(
+    public ResponseEntity<List<TaskResponseDto>> index(
             @RequestParam(name = "titleCont", required = false) String titleCont,
             @RequestParam(name = "assigneeId", required = false) Long assigneeId,
             @RequestParam(name = "statusSlug", required = false) String statusSlug,
@@ -46,10 +48,13 @@ public class TasksController {
                 || effectiveStatus != null
                 || labelId != null;
 
-        if (hasAnyFilter) {
-            return service.list(titleCont, assigneeId, effectiveStatus, labelId);
-        }
-        return service.list();
+        List<TaskResponseDto> data = hasAnyFilter
+                ? service.list(titleCont, assigneeId, effectiveStatus, labelId)
+                : service.list();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", String.valueOf(data.size()));
+        return ResponseEntity.ok().headers(headers).body(data);
     }
 
     @GetMapping("/{id}")

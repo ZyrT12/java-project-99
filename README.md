@@ -12,3 +12,5 @@ This application is a task management system. It allows you to set tasks, assign
 ## Demo
 Приложение деплоится на Render.com:  
 👉 https://java-project-99-61wv.onrender.com
+login: `admin@local`  password: `admin123`
+

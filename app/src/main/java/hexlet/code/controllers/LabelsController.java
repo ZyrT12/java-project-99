@@ -6,7 +6,10 @@ import hexlet.code.dto.labels.LabelUpdateDto;
 import hexlet.code.service.LabelService;
 import jakarta.validation.Valid;
 import java.util.List;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,8 +35,11 @@ public class LabelsController {
     }
 
     @GetMapping
-    public List<LabelDto> getAll() {
-        return service.getAll();
+    public ResponseEntity<List<LabelDto>> getAll() {
+        List<LabelDto> data = service.getAll();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", String.valueOf(data.size()));
+        return ResponseEntity.ok().headers(headers).body(data);
     }
 
     @PostMapping

@@ -7,6 +7,8 @@ import hexlet.code.model.TaskStatus;
 import hexlet.code.service.TaskStatusService;
 import java.net.URI;
 import java.util.List;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -31,8 +33,11 @@ public class TaskStatusController {
     }
 
     @GetMapping
-    public List<TaskStatus> index() {
-        return service.findAll();
+    public ResponseEntity<List<TaskStatus>> index() {
+        List<TaskStatus> data = service.findAll();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", String.valueOf(data.size()));
+        return ResponseEntity.ok().headers(headers).body(data);
     }
 
     @GetMapping("/{id}")
@@ -54,7 +59,7 @@ public class TaskStatusController {
     @PatchMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskStatus> patch(@PathVariable Long id, @Validated(OnUpdate.class)
-    @RequestBody TaskStatusUpsertDto dto) {
+        @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus updated = service.updatePartial(id, dto);
         return ResponseEntity.ok(updated);
     }
