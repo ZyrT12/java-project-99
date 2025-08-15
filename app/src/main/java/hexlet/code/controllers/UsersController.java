@@ -5,10 +5,13 @@ import hexlet.code.dto.users.UserResponseDto;
 import hexlet.code.dto.users.UserUpdateDto;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -32,8 +36,17 @@ public class UsersController {
     }
 
     @GetMapping
-    public List<UserResponseDto> index() {
-        return repository.findAll().stream().map(this::toDto).toList();
+    public ResponseEntity<List<UserResponseDto>> index(
+            @RequestParam(name = "_page", defaultValue = "1") int page,
+            @RequestParam(name = "_perPage", defaultValue = "25") int perPage,
+            HttpServletResponse response
+    ) {
+        int pageIndex = Math.max(page - 1, 0);
+        Page<User> p = repository.findAll(PageRequest.of(pageIndex, perPage));
+        response.setHeader("X-Total-Count", String.valueOf(p.getTotalElements()));
+        response.setHeader("Access-Control-Expose-Headers", "X-Total-Count, Authorization, Content-Range");
+        List<UserResponseDto> body = p.getContent().stream().map(this::toDto).toList();
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/{id}")

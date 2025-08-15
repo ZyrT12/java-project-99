@@ -5,13 +5,14 @@ import hexlet.code.dto.auth.LoginResponse;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
 import hexlet.code.security.JwtService;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 @RestController
 public class AuthController {
@@ -33,6 +34,8 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
         String token = jwtService.issue(user.getId(), user.getEmail());
-        return ResponseEntity.ok(new LoginResponse(token));
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        return ResponseEntity.ok().headers(headers).body(new LoginResponse(token));
     }
 }

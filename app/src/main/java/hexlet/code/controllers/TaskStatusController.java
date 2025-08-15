@@ -53,7 +53,8 @@ public class TaskStatusController {
 
     @PatchMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatus> patch(@PathVariable Long id, @Validated(OnUpdate.class) @RequestBody TaskStatusUpsertDto dto) {
+    public ResponseEntity<TaskStatus> patch(@PathVariable Long id, @Validated(OnUpdate.class)
+    @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus updated = service.updatePartial(id, dto);
         return ResponseEntity.ok(updated);
     }
