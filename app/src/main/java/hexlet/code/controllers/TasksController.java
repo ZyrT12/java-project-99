@@ -6,7 +6,6 @@ import hexlet.code.service.TaskService;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/tasks")
-@PreAuthorize("isAuthenticated()")
 public class TasksController {
 
     private final TaskService service;
@@ -37,24 +35,32 @@ public class TasksController {
             @RequestParam(name = "assigneeId", required = false) Long assigneeId,
             @RequestParam(name = "statusSlug", required = false) String statusSlug,
             @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "labelId", required = false) Long labelId
+            @RequestParam(name = "labelId", required = false) Long labelId,
+            @RequestParam(name = "_start", required = false) Integer start,
+            @RequestParam(name = "_end", required = false) Integer end,
+            @RequestParam(name = "_sort", required = false) String sort,
+            @RequestParam(name = "_order", required = false) String order,
+            @RequestParam(name = "filter", required = false) String filter
     ) {
         String effectiveStatus = (statusSlug != null && !statusSlug.isBlank())
                 ? statusSlug
                 : (status != null && !status.isBlank() ? status : null);
 
-        boolean hasAnyFilter = (titleCont != null && !titleCont.isBlank())
+        List<TaskResponseDto> all = (titleCont != null && !titleCont.isBlank())
                 || assigneeId != null
                 || effectiveStatus != null
-                || labelId != null;
-
-        List<TaskResponseDto> data = hasAnyFilter
+                || labelId != null
                 ? service.list(titleCont, assigneeId, effectiveStatus, labelId)
                 : service.list();
 
+        int total = all.size();
+        int from = start != null ? Math.max(0, start) : 0;
+        int to = end != null ? Math.min(total, end) : total;
+        List<TaskResponseDto> page = all.subList(from, to);
+
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", String.valueOf(data.size()));
-        return ResponseEntity.ok().headers(headers).body(data);
+        headers.add("X-Total-Count", String.valueOf(total));
+        return ResponseEntity.ok().headers(headers).body(page);
     }
 
     @GetMapping("/{id}")
@@ -63,18 +69,21 @@ public class TasksController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskUpsertDto dto) {
         TaskResponseDto saved = service.create(dto);
         return ResponseEntity.created(URI.create("/api/tasks/" + saved.getId())).body(saved);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TaskResponseDto> update(@PathVariable Long id, @Valid @RequestBody TaskUpsertDto dto) {
         TaskResponseDto saved = service.update(id, dto);
         return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();

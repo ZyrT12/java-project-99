@@ -10,15 +10,7 @@ import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/labels")
@@ -35,11 +27,21 @@ public class LabelsController {
     }
 
     @GetMapping
-    public ResponseEntity<List<LabelDto>> getAll() {
-        List<LabelDto> data = service.getAll();
+    public ResponseEntity<List<LabelDto>> getAll(
+            @RequestParam(name = "_start", required = false) Integer start,
+            @RequestParam(name = "_end", required = false) Integer end,
+            @RequestParam(name = "_sort", required = false) String sort,
+            @RequestParam(name = "_order", required = false) String order,
+            @RequestParam(name = "filter", required = false) String filter
+    ) {
+        List<LabelDto> all = service.getAll();
+        int total = all.size();
+        int from = start != null ? Math.max(0, start) : 0;
+        int to = end != null ? Math.min(total, end) : total;
+        List<LabelDto> page = all.subList(from, to);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", String.valueOf(data.size()));
-        return ResponseEntity.ok().headers(headers).body(data);
+        headers.add("X-Total-Count", String.valueOf(total));
+        return ResponseEntity.ok().headers(headers).body(page);
     }
 
     @PostMapping
