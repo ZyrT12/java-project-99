@@ -22,4 +22,4 @@ lint:
 
 build-run: build run
 
-.PHONY: build
+.PHONY: run-dist clean build install run report lint build-run
