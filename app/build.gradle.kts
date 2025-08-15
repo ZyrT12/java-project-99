@@ -17,33 +17,33 @@ repositories {
 }
 
 dependencies {
-
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	runtimeOnly("com.h2database:h2")
-	runtimeOnly("org.postgresql:postgresql")
+	implementation("org.springframework.boot:spring-boot-starter-security")
 
 	implementation("io.javalin:javalin-bundle:6.1.3")
 
 	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 	implementation("org.hibernate.validator:hibernate-validator:8.0.1.Final")
+
 	implementation("org.mindrot:jbcrypt:0.4")
 	implementation("com.auth0:java-jwt:4.4.0")
 	implementation("at.favre.lib:bcrypt:0.10.2")
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.flywaydb:flyway-core")
+
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
-	implementation("org.postgresql:postgresql:42.7.3")
+
+	implementation("org.flywaydb:flyway-core:10.17.3")
+	implementation("org.flywaydb:flyway-database-postgresql:10.17.3")
+
+	runtimeOnly("org.postgresql:postgresql:42.7.3")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("io.rest-assured:rest-assured:5.4.0")
 	testImplementation("org.assertj:assertj-core:3.26.0")
-	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("com.h2database:h2")
-
-	testImplementation(kotlin("test"))
 }
+
 
 configurations.all {
 	exclude(group = "org.eclipse.jetty")
