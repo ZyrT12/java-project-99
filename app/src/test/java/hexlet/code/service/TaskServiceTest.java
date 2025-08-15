@@ -3,8 +3,10 @@ package hexlet.code.service;
 import hexlet.code.dto.tasks.TaskResponseDto;
 import hexlet.code.dto.tasks.TaskUpsertDto;
 import hexlet.code.model.TaskStatus;
-import hexlet.code.repository.TaskStatusRepository;
+
 import java.util.List;
+
+import hexlet.code.repository.TaskStatusRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

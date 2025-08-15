@@ -3,8 +3,10 @@ package hexlet.code.service;
 import hexlet.code.dto.labels.LabelCreateDto;
 import hexlet.code.dto.labels.LabelDto;
 import hexlet.code.model.Label;
-import hexlet.code.repository.LabelRepository;
+
 import java.util.Optional;
+
+import hexlet.code.repository.LabelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
