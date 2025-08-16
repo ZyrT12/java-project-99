@@ -1,37 +1,39 @@
-HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
+### Java ###
+*.class
+*.log
+*.ctxt
+hs_err_pid*
+replay_pid*
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+### Build ###
+/build/
+/out/
+/target/
+/bin/
+/dist/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
+### Gradle ###
+.gradle/
+/!gradle/wrapper/gradle-wrapper.jar
+
+### Spring Boot ###
+*.jar
+*.war
+
+### IDE ###
+.idea/
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
+*.iws
 .vscode/
+.project
+.classpath
+.settings/
+.sts4-cache/
+
+node_modules/
+package-lock.json
+package.json
+
+### Misc ###
+HELP.md
