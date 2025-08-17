@@ -94,11 +94,19 @@ tasks.jacocoTestReport {
 
 sonarqube {
 	properties {
-		property("sonar.projectKey", "ZyrT12_java-project-99")
-		property("sonar.organization", "zyrt12")
 		property("sonar.host.url", "https://sonarcloud.io")
+		property("sonar.organization", "zyrt12")
+		property("sonar.projectKey", "ZyrT12_java-project-99")
+
+		property("sonar.sources", "src/main/java")
+		property("sonar.tests", "src/test/java")
+		property("sonar.java.binaries", "build/classes/java/main")
+
+		property("sonar.junit.reportPaths", "build/test-results/test")
+		property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
 	}
 }
+
 
 tasks.named("sonar").configure { dependsOn(tasks.jacocoTestReport) }
 tasks.named("sonarqube").configure { dependsOn(tasks.jacocoTestReport) }
