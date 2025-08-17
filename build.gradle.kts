@@ -67,6 +67,7 @@ jacoco {
 
 tasks.test {
 	useJUnitPlatform()
+	systemProperty("spring.profiles.active", "test")
 	finalizedBy(tasks.jacocoTestReport)
 	testLogging {
 		events = setOf(
@@ -76,7 +77,7 @@ tasks.test {
 		)
 		exceptionFormat = TestExceptionFormat.FULL
 		showExceptions = true
-		showStandardStreams = false
+		showStandardStreams = true
 	}
 }
 

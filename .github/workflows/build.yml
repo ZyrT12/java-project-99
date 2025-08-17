@@ -43,7 +43,7 @@ jobs:
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonar --info
+        run: ./gradlew build sonar --info -Dspring.profiles.active=test
 
       - name: Build Docker image
         uses: docker/build-push-action@v6
