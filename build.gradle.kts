@@ -29,6 +29,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
+	testImplementation("com.h2database:h2")
+
 
 	implementation("io.javalin:javalin-bundle:6.1.3")
 
@@ -50,7 +52,6 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("io.rest-assured:rest-assured:5.4.0")
 	testImplementation("org.assertj:assertj-core:3.26.0")
-	testImplementation("com.h2database:h2")
 }
 
 configurations.all {
