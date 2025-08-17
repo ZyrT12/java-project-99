@@ -12,6 +12,15 @@ plugins {
 	id("io.freefair.lombok") version "8.4"
 }
 
+group = "hexlet.code"
+version = "0.0.1-SNAPSHOT"
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
 repositories {
 	mavenCentral()
 }
@@ -44,43 +53,31 @@ dependencies {
 	testImplementation("com.h2database:h2")
 }
 
-
 configurations.all {
 	exclude(group = "org.eclipse.jetty")
-}
-
-jacoco {
-	toolVersion = "0.8.11"
 }
 
 application {
 	mainClass.set("hexlet.code.AppApplication")
 }
 
-group = "hexlet.code"
-version = "0.0.1-SNAPSHOT"
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-sonar {
-	properties {
-		property("sonar.projectKey", "ZyrT12_java-project-99")
-		property("sonar.organization", "zyrt12")
-		property("sonar.host.url", "https://sonarcloud.io")
-	}
-}
-
-tasks.sonar {
-	dependsOn(tasks.jacocoTestReport)
+jacoco {
+	toolVersion = "0.8.11"
 }
 
 tasks.test {
 	useJUnitPlatform()
 	finalizedBy(tasks.jacocoTestReport)
+	testLogging {
+		events = setOf(
+			TestLogEvent.PASSED,
+			TestLogEvent.FAILED,
+			TestLogEvent.SKIPPED
+		)
+		exceptionFormat = TestExceptionFormat.FULL
+		showExceptions = true
+		showStandardStreams = false
+	}
 }
 
 tasks.jacocoTestReport {
@@ -94,3 +91,14 @@ tasks.jacocoTestReport {
 	sourceDirectories.setFrom(files("src/main/java"))
 	executionData.setFrom(fileTree(buildDir).include("jacoco/test.exec"))
 }
+
+sonarqube {
+	properties {
+		property("sonar.projectKey", "ZyrT12_java-project-99")
+		property("sonar.organization", "zyrt12")
+		property("sonar.host.url", "https://sonarcloud.io")
+	}
+}
+
+tasks.named("sonar").configure { dependsOn(tasks.jacocoTestReport) }
+tasks.named("sonarqube").configure { dependsOn(tasks.jacocoTestReport) }

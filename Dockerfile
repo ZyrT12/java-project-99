@@ -1,4 +1,4 @@
-# app/Dockerfile
+# ===== Build stage =====
 FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /project
 
@@ -9,17 +9,15 @@ COPY build.gradle.kts ./build.gradle.kts
 COPY src ./src
 
 RUN chmod +x ./gradlew
-RUN ./gradlew --no-daemon clean installDist
+RUN ./gradlew --no-daemon clean bootJar
 
 FROM eclipse-temurin:21-jre
 WORKDIR /opt/app
 
-ARG APP_NAME=app
-
-COPY --from=builder /project/build/install/${APP_NAME}/ /opt/app/
+COPY --from=builder /project/build/libs/*.jar /opt/app/app.jar
 
 ENV SPRING_PROFILES_ACTIVE=prod
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["/opt/app/bin/app", "-Dserver.port=${PORT}"]
+ENTRYPOINT ["java","-jar","/opt/app/app.jar"]

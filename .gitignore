@@ -31,9 +31,9 @@ replay_pid*
 .settings/
 .sts4-cache/
 
+### Node ###
 node_modules/
 package-lock.json
-package.json
 
 ### Misc ###
 HELP.md
