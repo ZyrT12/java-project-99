@@ -9,7 +9,6 @@ import java.net.URI;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -57,30 +56,26 @@ public class TaskStatusController {
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatus> create(@Validated(OnCreate.class) @RequestBody TaskStatusUpsertDto dto) {
+        public ResponseEntity<TaskStatus> create(@Validated(OnCreate.class) @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus saved = service.create(dto);
         return ResponseEntity.created(URI.create("/api/task-statuses/" + saved.getId())).body(saved);
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatus> patch(@PathVariable Long id, @Validated(OnUpdate.class)
+        public ResponseEntity<TaskStatus> patch(@PathVariable Long id, @Validated(OnUpdate.class)
         @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus updated = service.updatePartial(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TaskStatus> update(@PathVariable Long id, @RequestBody TaskStatusUpsertDto dto) {
+        public ResponseEntity<TaskStatus> update(@PathVariable Long id, @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus updated = service.updatePartial(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

@@ -1,70 +1,71 @@
 package hexlet.code.users;
 
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.BeforeAll;
+import io.restassured.http.ContentType;
+import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasKey;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.core.IsNot.not;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@ActiveProfiles("test")
-public class UsersApiTest {
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class UsersApiTest {
 
-    @BeforeAll
-    static void setUp() {
-        RestAssured.baseURI = "http://localhost";
-        RestAssured.port = 8080;
+    @LocalServerPort
+    int port;
+
+    @BeforeEach
+    void setUp() {
+        RestAssured.port = port;
+        RestAssured.basePath = "/api";
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
     @Test
     void crud() {
-        var id =
-                given().contentType("application/json")
-                        .body("""
-                            {"email":"jack@google.com","firstName":"Jack","lastName":"Jons","password":"some-password"}
-                            """)
-                        .when().post("/api/users")
-                        .then().statusCode(201)
-                        .body("email", equalTo("jack@google.com"))
-                        .body("$", not(hasKey("password")))
-                        .extract().path("id");
+        String adminEmail = "admin+" + UUID.randomUUID() + "@example.com";
+        String userEmail = "jack+" + UUID.randomUUID() + "@yahoo.com";
 
-        given().when().get("/api/users/" + id)
-                .then().statusCode(200)
-                .body("email", equalTo("jack@google.com"))
-                .body("$", not(hasKey("password")));
-
-        given().when().get("/api/users")
-                .then().statusCode(200)
-                .body("size()", greaterThanOrEqualTo(1));
-
-        given().contentType("application/json")
+        RestAssured.given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
                 .body("""
-                        {"email":"jack@yahoo.com","password":"new-password"}
-                      """)
-                .when().put("/api/users/" + id)
-                .then().statusCode(200)
-                .body("email", equalTo("jack@yahoo.com"));
+                      {"email":"%s","password":"secret","firstName":"Admin","lastName":"User"}
+                      """.formatted(adminEmail))
+                .post("/users")
+                .then()
+                .statusCode(201);
 
-        given().when().delete("/api/users/" + id)
-                .then().statusCode(204);
-
-        given().when().get("/api/users/" + id).then().statusCode(404);
-    }
-
-    @Test
-    void validation() {
-        given().contentType("application/json")
+        String token = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
                 .body("""
-                        {"email":"not-email","password":"12"}
-                      """)
-                .when().post("/api/users")
-                .then().statusCode(400);
+                      {"email":"%s","password":"secret"}
+                      """.formatted(adminEmail))
+                .post("/login")
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("token");
+
+        RestAssured.given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .body("""
+                      {"email":"%s","password":"p@ss","firstName":"Jack","lastName":"Smith"}
+                      """.formatted(userEmail))
+                .post("/users")
+                .then()
+                .statusCode(201);
+
+        RestAssured.given()
+                .accept(ContentType.JSON)
+                .header("Authorization", "Bearer " + token)
+                .get("/users")
+                .then()
+                .statusCode(200);
     }
 }

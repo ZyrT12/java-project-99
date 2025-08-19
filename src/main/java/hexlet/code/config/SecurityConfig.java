@@ -4,7 +4,6 @@ import hexlet.code.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,40 +17,33 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception {
-        http.cors(Customizer.withDefaults());
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable);
-        http.httpBasic(AbstractHttpConfigurer::disable);
-        http.formLogin(AbstractHttpConfigurer::disable);
 
-        http.exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> res.setStatus(401)));
-
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.exceptionHandling(c ->
+                c.authenticationEntryPoint((req, res, ex) ->
+                        res.sendError(401)));
 
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers(HttpMethod.GET,
-                        "/",
-                        "/index.html",
-                        "/static/**",
-                        "/assets/**",
-                        "/favicon.ico",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/api/task-statuses/**",
-                        "/api/task_statuses/**",
-                        "/api/users/**",
-                        "/api/labels/**",
-                        "/api/tasks/**"
-                ).permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/login", "/login", "/api/users/**").permitAll()
-                .requestMatchers(HttpMethod.PUT, "/api/users/**").permitAll()
-                .requestMatchers(HttpMethod.PATCH, "/api/users/**").permitAll()
-                .requestMatchers(HttpMethod.DELETE, "/api/users/**").permitAll()
+                .requestMatchers("/", "/index.html", "/favicon.ico", "/assets/**",
+                        "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/task-statuses", "/api/task-statuses/**",
+                        "/api/task_statuses", "/api/task_statuses/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/login", "/login").permitAll()
                 .anyRequest().authenticated()
         );
+
+        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
