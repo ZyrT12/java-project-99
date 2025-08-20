@@ -51,14 +51,12 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(Transactional.TxType.REQUIRED)
     public TaskResponseDto create(TaskUpsertDto dto) {
         Task task = new Task();
-
         if (dto.getTitle() != null) {
             task.setTitle(dto.getTitle());
         }
         if (dto.getContent() != null || dto.getDescription() != null) {
             task.setContent(dto.getContent() != null ? dto.getContent() : dto.getDescription());
         }
-
         if (dto.getStatus() != null) {
             TaskStatus status = statusRepo.findBySlug(dto.getStatus()).orElseThrow();
             task.setTaskStatus(status);
@@ -71,7 +69,6 @@ public class TaskServiceImpl implements TaskService {
                     .orElseGet(() -> statusRepo.findAll().stream().findFirst().orElseThrow());
             task.setTaskStatus(defaultStatus);
         }
-
         if (dto.getAssigneeId() != null) {
             if (dto.getAssigneeId() == 0L) {
                 task.setAssignee(null);
@@ -87,7 +84,6 @@ public class TaskServiceImpl implements TaskService {
                 task.setAssignee(user);
             }
         }
-
         List<Long> labelIds = dto.getTaskLabelIds() != null ? dto.getTaskLabelIds() : dto.getLabelIds();
         if (labelIds != null && !labelIds.isEmpty()) {
             Set<Label> labels = new HashSet<>(labelRepo.findAllById(labelIds));
@@ -95,7 +91,6 @@ public class TaskServiceImpl implements TaskService {
         } else {
             task.setLabels(Set.of());
         }
-
         Task saved = taskRepo.save(task);
         return toDto(saved);
     }
@@ -104,14 +99,12 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(Transactional.TxType.REQUIRED)
     public TaskResponseDto update(Long id, TaskUpsertDto dto) {
         Task task = taskRepo.findById(id).orElseThrow(NoSuchElementException::new);
-
         if (dto.getTitle() != null) {
             task.setTitle(dto.getTitle());
         }
         if (dto.getContent() != null || dto.getDescription() != null) {
             task.setContent(dto.getContent() != null ? dto.getContent() : dto.getDescription());
         }
-
         if (dto.getStatus() != null) {
             TaskStatus status = statusRepo.findBySlug(dto.getStatus()).orElseThrow();
             task.setTaskStatus(status);
@@ -119,29 +112,26 @@ public class TaskServiceImpl implements TaskService {
             TaskStatus status = statusRepo.findById(dto.getTaskStatusId()).orElseThrow();
             task.setTaskStatus(status);
         }
-
         if (dto.getAssigneeId() != null) {
             if (dto.getAssigneeId() == 0L) {
                 task.setAssignee(null);
             } else {
-                var assignee = userRepo.findById(dto.getAssigneeId()).orElseThrow();
+                User assignee = userRepo.findById(dto.getAssigneeId()).orElseThrow();
                 task.setAssignee(assignee);
             }
         } else if (dto.getExecutorId() != null) {
             if (dto.getExecutorId() == 0L) {
                 task.setAssignee(null);
             } else {
-                var assignee = userRepo.findById(dto.getExecutorId()).orElseThrow();
+                User assignee = userRepo.findById(dto.getExecutorId()).orElseThrow();
                 task.setAssignee(assignee);
             }
         }
-
         List<Long> labelIds = dto.getTaskLabelIds() != null ? dto.getTaskLabelIds() : dto.getLabelIds();
         if (labelIds != null) {
             Set<Label> labels = new HashSet<>(labelRepo.findAllById(labelIds));
             task.setLabels(labels);
         }
-
         Task saved = taskRepo.save(task);
         return toDto(saved);
     }
@@ -177,15 +167,11 @@ public class TaskServiceImpl implements TaskService {
         dto.setId(t.getId());
         dto.setTitle(t.getTitle());
         dto.setContent(t.getContent());
-        dto.setDescription(t.getContent());
         dto.setStatus(t.getTaskStatus() != null ? t.getTaskStatus().getSlug() : null);
-        dto.setTaskStatusId(t.getTaskStatus() != null ? t.getTaskStatus().getId() : null);
         dto.setAssigneeId(t.getAssignee() != null ? t.getAssignee().getId() : null);
-        dto.setExecutorId(t.getAssignee() != null ? t.getAssignee().getId() : null);
         dto.setTaskLabelIds(t.getLabels() != null
                 ? t.getLabels().stream().map(Label::getId).collect(Collectors.toList())
                 : List.of());
-        dto.setLabelIds(dto.getTaskLabelIds());
         dto.setCreatedAt(t.getCreatedAt());
         dto.setIndex(t.getIndex());
         return dto;

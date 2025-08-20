@@ -35,14 +35,6 @@ class TasksControllerTest {
     @Autowired
     private ObjectMapper om;
 
-    public MockMvc getMvc() {
-        return mvc;
-    }
-
-    public ObjectMapper getOm() {
-        return om;
-    }
-
     @Test
     @WithMockUser
     void crudFlow() throws Exception {
@@ -53,6 +45,7 @@ class TasksControllerTest {
         ResultActions createdStatus = mvc.perform(createStatus).andExpect(status().isCreated());
         String statusBody = createdStatus.andReturn().getResponse().getContentAsString();
         Long statusId = om.readTree(statusBody).get("id").asLong();
+        String statusSlug = om.readTree(statusBody).get("slug").asText();
 
         TaskUpsertDto createDto = new TaskUpsertDto();
         createDto.setTitle("First task");
@@ -66,7 +59,7 @@ class TasksControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.title", is("First task")))
-                .andExpect(jsonPath("$.taskStatusId", is(statusId.intValue())));
+                .andExpect(jsonPath("$.status", is(statusSlug)));
         JsonNode createdTaskJson = om.readTree(createdTask.andReturn().getResponse().getContentAsString());
         Long taskId = createdTaskJson.get("id").asLong();
 
@@ -88,7 +81,8 @@ class TasksControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(updateDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title", is("Updated task")));
+                .andExpect(jsonPath("$.title", is("Updated task")))
+                .andExpect(jsonPath("$.status", is(statusSlug)));
 
         mvc.perform(delete("/api/tasks/{id}", taskId)).andExpect(status().isNoContent());
         mvc.perform(get("/api/tasks/{id}", taskId)).andExpect(status().isNotFound());

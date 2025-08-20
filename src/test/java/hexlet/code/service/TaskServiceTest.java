@@ -3,10 +3,8 @@ package hexlet.code.service;
 import hexlet.code.dto.tasks.TaskResponseDto;
 import hexlet.code.dto.tasks.TaskUpsertDto;
 import hexlet.code.model.TaskStatus;
-
-import java.util.List;
-
 import hexlet.code.repository.TaskStatusRepository;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +23,7 @@ class TaskServiceTest {
     private TaskStatusRepository statusRepository;
 
     private Long statusId;
+    private String statusSlug;
 
     @BeforeEach
     void setUp() {
@@ -32,6 +31,7 @@ class TaskServiceTest {
         status.setName("In progress");
         status.setSlug("in_progress");
         statusId = statusRepository.save(status).getId();
+        statusSlug = "in_progress";
     }
 
     @Test
@@ -43,7 +43,7 @@ class TaskServiceTest {
         TaskResponseDto created = taskService.create(createDto);
         Assertions.assertNotNull(created.getId());
         Assertions.assertEquals("ServiceTask", created.getTitle());
-        Assertions.assertEquals(statusId, created.getTaskStatusId());
+        Assertions.assertEquals(statusSlug, created.getStatus());
 
         TaskUpsertDto updateDto = new TaskUpsertDto();
         updateDto.setTitle("ServiceTask2");
@@ -51,6 +51,7 @@ class TaskServiceTest {
         updateDto.setTaskStatusId(statusId);
         TaskResponseDto updated = taskService.update(created.getId(), updateDto);
         Assertions.assertEquals("ServiceTask2", updated.getTitle());
+        Assertions.assertEquals(statusSlug, updated.getStatus());
 
         List<TaskResponseDto> all = taskService.list();
         Assertions.assertTrue(all.stream().anyMatch(t -> t.getId().equals(created.getId())));

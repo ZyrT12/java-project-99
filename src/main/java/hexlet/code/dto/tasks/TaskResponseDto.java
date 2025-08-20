@@ -1,5 +1,6 @@
 package hexlet.code.dto.tasks;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 import java.util.List;
@@ -10,21 +11,37 @@ public class TaskResponseDto extends TaskBaseDto {
     private LocalDate createdAt;
 
     @JsonProperty("assignee_id")
+    @Override
     public Long getAssigneeId() {
         return super.getAssigneeId();
     }
 
     @JsonProperty("taskLabelIds")
+    @Override
     public List<Long> getTaskLabelIds() {
         return super.getTaskLabelIds();
     }
 
-    @JsonProperty("executorId")
+    @JsonIgnore
+    @Override
     public Long getExecutorId() {
         return super.getExecutorId();
     }
 
-    @JsonProperty("description")
+    @JsonIgnore
+    @Override
+    public Long getTaskStatusId() {
+        return super.getTaskStatusId();
+    }
+
+    @JsonIgnore
+    @Override
+    public List<Long> getLabelIds() {
+        return super.getLabelIds();
+    }
+
+    @JsonIgnore
+    @Override
     public String getDescription() {
         return super.getDescription();
     }
