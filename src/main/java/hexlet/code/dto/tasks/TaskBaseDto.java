@@ -41,7 +41,6 @@ public abstract class TaskBaseDto {
     public List<Long> getTaskLabelIds() {
         return taskLabelIds;
     }
-    
     @JsonProperty("taskStatusId")
     public Long getTaskStatusId() {
         return taskStatusId;

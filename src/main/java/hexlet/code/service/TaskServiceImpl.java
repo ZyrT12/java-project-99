@@ -55,7 +55,6 @@ public class TaskServiceImpl implements TaskService {
         if (dto.getTitle() != null) {
             task.setTitle(dto.getTitle());
         }
-        
         if (dto.getContent() != null || dto.getDescription() != null) {
             task.setContent(dto.getContent() != null ? dto.getContent() : dto.getDescription());
         }
