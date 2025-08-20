@@ -52,8 +52,17 @@ class GlobalExceptionHandlerExtraTest {
 
         static class Payload {
             @NotBlank
-            public String name;
+            private String name;
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
         }
+
 
         @PostMapping(path = "/err-validation", consumes = "application/json")
         String errValidation(@Valid @RequestBody Payload payload) {
