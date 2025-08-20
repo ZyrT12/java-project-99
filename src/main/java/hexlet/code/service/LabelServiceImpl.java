@@ -5,11 +5,10 @@ import hexlet.code.dto.labels.LabelDto;
 import hexlet.code.dto.labels.LabelUpdateDto;
 import hexlet.code.model.Label;
 import hexlet.code.repository.LabelRepository;
+import hexlet.code.utils.SlugUtils;
 import jakarta.validation.Valid;
-import java.text.Normalizer;
+import java.time.Instant;
 import java.util.List;
-import java.util.Locale;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +36,8 @@ public class LabelServiceImpl implements LabelService {
     public LabelDto create(@Valid LabelCreateDto data) {
         Label l = new Label();
         l.setName(data.getName());
-        l.setSlug(slugify(data.getName()));
+        l.setSlug(SlugUtils.slugify(data.getName()));
+        l.setCreatedAt(Instant.now());
         Label saved = repository.save(l);
         return toDto(saved);
     }
@@ -45,8 +45,10 @@ public class LabelServiceImpl implements LabelService {
     @Override
     public LabelDto update(Long id, @Valid LabelUpdateDto data) {
         Label l = repository.findById(id).orElseThrow();
-        l.setName(data.getName());
-        l.setSlug(slugify(data.getName()));
+        if (data.getName() != null && !data.getName().isBlank()) {
+            l.setName(data.getName());
+            l.setSlug(SlugUtils.slugify(data.getName()));
+        }
         Label saved = repository.save(l);
         return toDto(saved);
     }
@@ -61,16 +63,8 @@ public class LabelServiceImpl implements LabelService {
         LabelDto dto = new LabelDto();
         dto.setId(label.getId());
         dto.setName(label.getName());
+        dto.setSlug(label.getSlug());
+        dto.setCreatedAt(label.getCreatedAt());
         return dto;
-    }
-
-    private String slugify(String source) {
-        if (source == null) {
-            return null;
-        }
-        String nowhitespace = source.trim().replaceAll("\\s+", "-");
-        String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
-        String slug = Pattern.compile("[^\\p{Alnum}-]").matcher(normalized).replaceAll("");
-        return slug.toLowerCase(Locale.ROOT);
     }
 }
