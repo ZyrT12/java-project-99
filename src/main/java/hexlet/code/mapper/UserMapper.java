@@ -12,12 +12,16 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "passwordHash", ignore = true)
     User fromCreate(UserCreateDto dto);
 
     UserResponseDto toResponse(User user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "passwordHash", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     void update(@MappingTarget User user, UserUpdateDto dto);
 }

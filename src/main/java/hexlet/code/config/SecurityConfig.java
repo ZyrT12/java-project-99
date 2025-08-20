@@ -1,51 +1,69 @@
 package hexlet.code.config;
 
-import hexlet.code.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.http.HttpStatus;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    private SecurityFilterChain commonChain(HttpSecurity http, boolean enableJwt) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(h ->
+                        h.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers("/", "/index.html", "/assets/**",
+                                "/favicon.ico", "/actuator/health").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
+
+                        .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+
+                        .anyRequest().authenticated()
+            );
+
+        if (enableJwt) {
+            http.oauth2ResourceServer(oauth2 ->
+                    oauth2.jwt(j -> {
+
+                    }));
+        } else {
+            http.oauth2ResourceServer(AbstractHttpConfigurer::disable);
+        }
+
+        return http.build();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable);
+    @Profile("!test")
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return commonChain(http, true);
+    }
 
-        http.exceptionHandling(c ->
-                c.authenticationEntryPoint((req, res, ex) ->
-                        res.sendError(401)));
-
-        http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/favicon.ico", "/assets/**",
-                        "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/users", "/api/users/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/task-statuses", "/api/task-statuses/**",
-                        "/api/task_statuses", "/api/task_statuses/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/login", "/login").permitAll()
-                .anyRequest().authenticated()
-        );
-
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+    @Bean
+    @Profile("test")
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+        return commonChain(http, false);
     }
 
     @Bean

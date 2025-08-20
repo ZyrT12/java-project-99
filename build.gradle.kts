@@ -33,10 +33,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
-	testImplementation("com.h2database:h2")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	runtimeOnly("com.h2database:h2:2.2.224")
 
-	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
-	implementation("org.hibernate.validator:hibernate-validator:8.0.1.Final")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
 
 	implementation("org.mindrot:jbcrypt:0.4")
 	implementation("com.auth0:java-jwt:4.4.0")
@@ -53,6 +53,7 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testImplementation("io.rest-assured:rest-assured:5.4.0")
 	testImplementation("org.assertj:assertj-core:3.26.0")
+	testImplementation("com.h2database:h2:2.2.224")
 }
 
 configurations.all {
