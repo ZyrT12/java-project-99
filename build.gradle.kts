@@ -89,9 +89,8 @@ tasks.test {
 tasks.jacocoTestReport {
 	dependsOn(tasks.test)
 	reports {
-		xml.required.set(true)
-		html.required.set(true)
-		csv.required.set(false)
+		xml.required = true
+		html.required = true
 	}
 	classDirectories.setFrom(files("build/classes/java/main"))
 	sourceDirectories.setFrom(files("src/main/java"))
