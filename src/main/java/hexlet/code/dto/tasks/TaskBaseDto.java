@@ -12,10 +12,7 @@ public abstract class TaskBaseDto {
     @JsonProperty("status")
     private String status;
 
-    @JsonProperty("assignee_id")
     private Long assigneeId;
-
-    @JsonProperty("taskLabelIds")
     private List<Long> taskLabelIds;
 
     private String description;
@@ -35,28 +32,33 @@ public abstract class TaskBaseDto {
         return status;
     }
 
+    @JsonProperty("assignee_id")
     public Long getAssigneeId() {
         return assigneeId;
     }
 
+    @JsonProperty("taskLabelIds")
     public List<Long> getTaskLabelIds() {
         return taskLabelIds;
     }
-
-    public String getDescription() {
-        return description != null ? description : content;
-    }
-
+    
+    @JsonProperty("taskStatusId")
     public Long getTaskStatusId() {
         return taskStatusId;
     }
 
+    @JsonProperty("executorId")
     public Long getExecutorId() {
         return executorId;
     }
 
+    @JsonProperty("labelIds")
     public List<Long> getLabelIds() {
         return labelIds;
+    }
+
+    public String getDescription() {
+        return description != null ? description : content;
     }
 
     public void setTitle(String title) {
@@ -74,6 +76,7 @@ public abstract class TaskBaseDto {
         this.status = status;
     }
 
+    @JsonProperty("assignee_id")
     public void setAssigneeId(Long assigneeId) {
         this.assigneeId = assigneeId;
         if (this.executorId == null) {
@@ -81,6 +84,7 @@ public abstract class TaskBaseDto {
         }
     }
 
+    @JsonProperty("taskLabelIds")
     public void setTaskLabelIds(List<Long> taskLabelIds) {
         this.taskLabelIds = taskLabelIds;
         if (this.labelIds == null) {
@@ -95,10 +99,12 @@ public abstract class TaskBaseDto {
         }
     }
 
+    @JsonProperty("taskStatusId")
     public void setTaskStatusId(Long taskStatusId) {
         this.taskStatusId = taskStatusId;
     }
 
+    @JsonProperty("executorId")
     public void setExecutorId(Long executorId) {
         this.executorId = executorId;
         if (this.assigneeId == null) {
@@ -106,6 +112,7 @@ public abstract class TaskBaseDto {
         }
     }
 
+    @JsonProperty("labelIds")
     public void setLabelIds(List<Long> labelIds) {
         this.labelIds = labelIds;
         if (this.taskLabelIds == null) {

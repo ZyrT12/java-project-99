@@ -66,6 +66,11 @@ public class TaskServiceImpl implements TaskService {
             TaskStatus status = statusRepo.findById(dto.getTaskStatusId()).orElseThrow();
             task.setTaskStatus(status);
         }
+        if (task.getTaskStatus() == null) {
+            TaskStatus defaultStatus = statusRepo.findBySlug("new")
+                    .orElseGet(() -> statusRepo.findAll().stream().findFirst().orElseThrow());
+            task.setTaskStatus(defaultStatus);
+        }
 
         if (dto.getAssigneeId() != null) {
             if (dto.getAssigneeId() == 0L) {
@@ -177,14 +182,12 @@ public class TaskServiceImpl implements TaskService {
         dto.setTaskStatusId(t.getTaskStatus() != null ? t.getTaskStatus().getId() : null);
         dto.setAssigneeId(t.getAssignee() != null ? t.getAssignee().getId() : null);
         dto.setExecutorId(t.getAssignee() != null ? t.getAssignee().getId() : null);
-        dto.setTaskLabelIds(t.getLabels() != null ? t.getLabels()
-                .stream().map(Label::getId)
-                .collect(Collectors.toList()) : List.of());
-        dto.setLabelIds(t.getLabels() != null ? t.getLabels()
-                .stream()
-                .map(Label::getId)
-                .collect(Collectors.toList()) : List.of());
+        dto.setTaskLabelIds(t.getLabels() != null
+                ? t.getLabels().stream().map(Label::getId).collect(Collectors.toList())
+                : List.of());
+        dto.setLabelIds(dto.getTaskLabelIds());
         dto.setCreatedAt(t.getCreatedAt());
+        dto.setIndex(t.getIndex());
         return dto;
     }
 }

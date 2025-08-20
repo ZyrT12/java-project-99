@@ -30,29 +30,19 @@ public class TasksController {
 
     @GetMapping
     public ResponseEntity<List<TaskResponseDto>> index(
+            @RequestParam(name = "_start", required = false) Integer start,
+            @RequestParam(name = "_end", required = false) Integer end,
             @RequestParam(name = "titleCont", required = false) String titleCont,
             @RequestParam(name = "assigneeId", required = false) Long assigneeId,
-            @RequestParam(name = "statusSlug", required = false) String statusSlug,
-            @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "labelId", required = false) Long labelId,
-            @RequestParam(name = "_start", required = false) Integer start,
-            @RequestParam(name = "_end", required = false) Integer end
+            @RequestParam(name = "status", required = false) String statusSlug,
+            @RequestParam(name = "labelId", required = false) Long labelId
     ) {
-        String effectiveStatus = (statusSlug != null && !statusSlug.isBlank())
-                ? statusSlug
-                : (status != null && !status.isBlank() ? status : null);
+        List<TaskResponseDto> filtered = service.list(titleCont, assigneeId, statusSlug, labelId);
 
-        List<TaskResponseDto> all = (titleCont != null && !titleCont.isBlank())
-                || assigneeId != null
-                || effectiveStatus != null
-                || labelId != null
-                ? service.list(titleCont, assigneeId, effectiveStatus, labelId)
-                : service.list();
-
-        int total = all.size();
+        int total = filtered.size();
         int from = start != null ? Math.max(0, start) : 0;
         int to = end != null ? Math.min(total, end) : total;
-        List<TaskResponseDto> page = all.subList(from, to);
+        List<TaskResponseDto> page = filtered.subList(from, to);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(total));
@@ -60,24 +50,28 @@ public class TasksController {
     }
 
     @GetMapping("/{id}")
-    public TaskResponseDto show(@PathVariable Long id) {
-        return service.get(id);
+    public ResponseEntity<TaskResponseDto> show(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(service.get(id));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
-        public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskUpsertDto dto) {
+    public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskUpsertDto dto) {
         TaskResponseDto saved = service.create(dto);
         return ResponseEntity.created(URI.create("/api/tasks/" + saved.getId())).body(saved);
     }
 
     @PutMapping("/{id}")
-        public ResponseEntity<TaskResponseDto> update(@PathVariable Long id, @Valid @RequestBody TaskUpsertDto dto) {
-        TaskResponseDto saved = service.update(id, dto);
-        return ResponseEntity.ok(saved);
+    public ResponseEntity<TaskResponseDto> update(@PathVariable Long id, @Valid @RequestBody TaskUpsertDto dto) {
+        TaskResponseDto updated = service.update(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-        public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }

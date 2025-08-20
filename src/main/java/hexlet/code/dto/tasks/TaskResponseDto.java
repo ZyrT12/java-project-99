@@ -19,6 +19,16 @@ public class TaskResponseDto extends TaskBaseDto {
         return super.getTaskLabelIds();
     }
 
+    @JsonProperty("executorId")
+    public Long getExecutorId() {
+        return super.getExecutorId();
+    }
+
+    @JsonProperty("description")
+    public String getDescription() {
+        return super.getDescription();
+    }
+
     public Long getId() {
         return id;
     }
