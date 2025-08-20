@@ -4,4 +4,3 @@ CREATE TABLE IF NOT EXISTS labels (
     created_at DATE NOT NULL DEFAULT CURRENT_DATE
     );
 
-CREATE UNIQUE INDEX IF NOT EXISTS ux_labels_name ON labels (LOWER(name));
