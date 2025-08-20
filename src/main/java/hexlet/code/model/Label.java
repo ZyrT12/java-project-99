@@ -1,5 +1,6 @@
 package hexlet.code.model;
 
+import hexlet.code.utils.SlugUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -8,58 +9,23 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import java.text.Normalizer;
 import java.time.Instant;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.regex.Pattern;
 
 @Entity
 @Table(name = "labels")
 public class Label {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false, unique = true, length = 1000)
     private String name;
 
-    @Column(nullable = false, unique = false)
+    @Column(name = "slug", nullable = false, unique = true, length = 255)
     private String slug;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
-
-    public Label() {
-    }
-
-    public Label(String name) {
-        this.name = name;
-    }
-
-    @PrePersist
-    @PreUpdate
-    private void ensureSlug() {
-        if (this.slug == null || this.slug.isBlank()) {
-            this.slug = slugify(this.name);
-        }
-    }
-
-    private String slugify(String source) {
-        if (source == null) {
-            return "label";
-        }
-        String nowhitespace = source.trim().replaceAll("\\s+", "-");
-        String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
-        String slug = Pattern.compile("[^\\p{Alnum}-]").matcher(normalized).replaceAll("");
-        slug = slug.replaceAll("-{2,}", "-");
-        slug = slug.replaceAll("^-|-$", "");
-        if (slug.isBlank()) {
-            slug = "label";
-        }
-        return slug.toLowerCase(Locale.ROOT);
-    }
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
     public Long getId() {
         return id;
@@ -77,6 +43,10 @@ public class Label {
         return createdAt;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -85,23 +55,24 @@ public class Label {
         this.slug = slug;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof Label)) {
-            return false;
-        }
-        Label label = (Label) o;
-        if (id != null && label.id != null) {
-            return Objects.equals(id, label.id);
-        }
-        return Objects.equals(slug, label.slug);
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
-    @Override
-    public int hashCode() {
-        return id != null ? Objects.hash(id) : Objects.hash(slug);
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+        if (slug == null || slug.isBlank()) {
+            slug = SlugUtils.slugify(name);
+        }
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        if (slug == null || slug.isBlank()) {
+            slug = SlugUtils.slugify(name);
+        }
     }
 }
