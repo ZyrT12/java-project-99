@@ -2,7 +2,7 @@ package hexlet.code.dto.labels;
 
 import java.time.Instant;
 
-public class LabelDto {
+public class LabelResponseDto {
     private Long id;
     private String name;
     private String slug;
