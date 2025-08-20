@@ -7,23 +7,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class UsersApiTest {
 
     @LocalServerPort
     private int port;
 
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
     @BeforeEach
     void setUp() {
+        RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
         RestAssured.basePath = "/api";
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -42,7 +38,7 @@ class UsersApiTest {
                       """.formatted(adminEmail))
                 .post("/users")
                 .then()
-                .statusCode(201);
+                .statusCode(HttpStatus.CREATED.value());
 
         String token = RestAssured.given()
                 .contentType(ContentType.JSON)
@@ -52,7 +48,7 @@ class UsersApiTest {
                       """.formatted(adminEmail))
                 .post("/login")
                 .then()
-                .statusCode(200)
+                .statusCode(HttpStatus.OK.value())
                 .extract()
                 .path("token");
 
@@ -65,13 +61,13 @@ class UsersApiTest {
                       """.formatted(userEmail))
                 .post("/users")
                 .then()
-                .statusCode(201);
+                .statusCode(HttpStatus.CREATED.value());
 
         RestAssured.given()
                 .accept(ContentType.JSON)
                 .header("Authorization", "Bearer " + token)
                 .get("/users")
                 .then()
-                .statusCode(200);
+                .statusCode(HttpStatus.OK.value());
     }
 }
