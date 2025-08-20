@@ -63,7 +63,6 @@ public class LabelServiceImpl implements LabelService {
         LabelDto dto = new LabelDto();
         dto.setId(label.getId());
         dto.setName(label.getName());
-        dto.setSlug(label.getSlug());
         dto.setCreatedAt(label.getCreatedAt());
         return dto;
     }

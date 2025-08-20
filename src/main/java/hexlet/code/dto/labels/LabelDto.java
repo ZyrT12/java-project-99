@@ -5,7 +5,6 @@ import java.time.Instant;
 public class LabelDto {
     private Long id;
     private String name;
-    private String slug;
     private Instant createdAt;
 
     public Long getId() {
@@ -14,10 +13,6 @@ public class LabelDto {
 
     public String getName() {
         return name;
-    }
-
-    public String getSlug() {
-        return slug;
     }
 
     public Instant getCreatedAt() {
@@ -30,10 +25,6 @@ public class LabelDto {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public void setSlug(String slug) {
-        this.slug = slug;
     }
 
     public void setCreatedAt(Instant createdAt) {
