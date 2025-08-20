@@ -1,18 +1,16 @@
-create table if not exists tasks (
-    id           bigserial primary key,
-    index_number integer,
-    created_at   date not null default current_date,
-    title        varchar(255) not null,
-    content      text,
-    status_id    bigint not null,
-    assignee_id  bigint,
-
-    constraint fk_tasks_statuses
-    foreign key (status_id) references task_statuses(id) on delete restrict,
-
-    constraint fk_tasks_users
-    foreign key (assignee_id) references users(id) on delete restrict
+CREATE TABLE IF NOT EXISTS tasks (
+                                     id           BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                                     index_number INTEGER,
+                                     created_at   DATE NOT NULL DEFAULT CURRENT_DATE,
+                                     title        VARCHAR(255) NOT NULL,
+    content      TEXT,
+    status_id    BIGINT NOT NULL,
+    assignee_id  BIGINT,
+    CONSTRAINT fk_tasks_statuses
+    FOREIGN KEY (status_id) REFERENCES task_statuses(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_tasks_users
+    FOREIGN KEY (assignee_id) REFERENCES users(id) ON DELETE RESTRICT
     );
 
-create index if not exists idx_tasks_status   on tasks(status_id);
-create index if not exists idx_tasks_assignee on tasks(assignee_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status   ON tasks(status_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assignee ON tasks(assignee_id);

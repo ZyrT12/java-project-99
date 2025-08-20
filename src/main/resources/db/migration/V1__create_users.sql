@@ -1,10 +1,10 @@
-create table if not exists users (
-                                     id          bigserial primary key,
-                                     email       varchar(255) not null unique,
-    password    varchar(255) not null,
-    first_name  varchar(255),
-    last_name   varchar(255),
-    created_at  date not null default current_date
+CREATE TABLE IF NOT EXISTS users (
+                                     id         BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+                                     email      VARCHAR(255) NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255),
+    last_name  VARCHAR(255),
+    created_at DATE NOT NULL DEFAULT CURRENT_DATE
     );
 
-create index if not exists idx_users_email on users(email);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
