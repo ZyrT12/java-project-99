@@ -55,6 +55,9 @@ public class UsersServiceImpl implements UsersService {
     public UserResponseDto update(Long id, UserUpdateDto dto) {
         User user = userRepository.findById(id).orElseThrow(NoSuchElementException::new);
 
+        if (dto.email() != null) {
+            user.setEmail(dto.email());
+        }
         if (dto.firstName() != null) {
             user.setFirstName(dto.firstName());
         }
@@ -81,7 +84,7 @@ public class UsersServiceImpl implements UsersService {
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                null
+                user.getCreatedAt()
         );
     }
 }
