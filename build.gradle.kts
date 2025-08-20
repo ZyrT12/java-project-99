@@ -65,9 +65,8 @@ configurations.all {
 application {
 	mainClass.set("hexlet.code.AppApplication")
 }
-
 jacoco {
-	toolVersion = "0.8.11"
+	toolVersion = "0.8.12"
 }
 
 tasks.test {
@@ -92,9 +91,6 @@ tasks.jacocoTestReport {
 		xml.required = true
 		html.required = true
 	}
-	classDirectories.setFrom(files("build/classes/java/main"))
-	sourceDirectories.setFrom(files("src/main/java"))
-	executionData.setFrom(fileTree(buildDir).include("jacoco/test.exec"))
 }
 
 sonarqube {
@@ -102,16 +98,12 @@ sonarqube {
 		property("sonar.host.url", "https://sonarcloud.io")
 		property("sonar.organization", "zyrt12")
 		property("sonar.projectKey", "ZyrT12_java-project-99")
-
 		property("sonar.sources", "src/main/java")
 		property("sonar.tests", "src/test/java")
 		property("sonar.java.binaries", "build/classes/java/main")
-
 		property("sonar.junit.reportPaths", "build/test-results/test")
 		property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
 	}
 }
 
-
 tasks.named("sonar").configure { dependsOn(tasks.jacocoTestReport) }
-tasks.named("sonarqube").configure { dependsOn(tasks.jacocoTestReport) }
