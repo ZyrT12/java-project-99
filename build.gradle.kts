@@ -93,7 +93,7 @@ tasks.jacocoTestReport {
 	}
 }
 
-sonarqube {
+sonar {
 	properties {
 		property("sonar.host.url", "https://sonarcloud.io")
 		property("sonar.organization", "zyrt12")
@@ -102,8 +102,6 @@ sonarqube {
 		property("sonar.tests", "src/test/java")
 		property("sonar.java.binaries", "build/classes/java/main")
 		property("sonar.junit.reportPaths", "build/test-results/test")
-		property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+		property ("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
 	}
 }
-
-tasks.named("sonar").configure { dependsOn(tasks.jacocoTestReport) }
