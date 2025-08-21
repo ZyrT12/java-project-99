@@ -22,21 +22,23 @@ spring:
   config:
     activate:
       on-profile: test
+
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     username: sa
     password:
+
   jpa:
     open-in-view: true
     show-sql: false
     hibernate:
-      ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+      ddl-auto: none
+
   flyway:
-    enabled: false
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
 
 app:
   jwt:
@@ -44,7 +46,7 @@ app:
 
 server:
   port: 0
-
+  
 ---
 spring:
   config:
