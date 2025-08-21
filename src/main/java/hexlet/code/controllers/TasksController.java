@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,8 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = {"/api/tasks", "/api/tasks/", "/api/task", "/api/task/"},
-        produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping("/api/tasks")
 public class TasksController {
 
     private final TaskService service;
@@ -30,7 +28,7 @@ public class TasksController {
         this.service = service;
     }
 
-    @GetMapping(path = {"", "/"})
+    @GetMapping
     public ResponseEntity<List<TaskResponseDto>> index(
             @RequestParam(name = "_start", required = false) Integer start,
             @RequestParam(name = "_end", required = false) Integer end,
@@ -40,6 +38,7 @@ public class TasksController {
             @RequestParam(name = "labelId", required = false) Long labelId
     ) {
         List<TaskResponseDto> filtered = service.list(titleCont, assigneeId, statusSlug, labelId);
+
         int total = filtered.size();
         int from = start != null ? Math.max(0, start) : 0;
         int to = end != null ? Math.min(total, end) : total;
@@ -50,20 +49,25 @@ public class TasksController {
         return ResponseEntity.ok().headers(headers).body(page);
     }
 
-    @PostMapping(path = {"", "/"})
-    public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskUpsertDto dto) {
-        TaskResponseDto created = service.create(dto);
-        return ResponseEntity.created(URI.create("/api/tasks/" + created.getId())).body(created);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponseDto> show(@PathVariable Long id) {
-        return ResponseEntity.ok(service.get(id));
+        try {
+            return ResponseEntity.ok(service.get(id));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskUpsertDto dto) {
+        TaskResponseDto saved = service.create(dto);
+        return ResponseEntity.created(URI.create("/api/tasks/" + saved.getId())).body(saved);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponseDto> update(@PathVariable Long id, @Valid @RequestBody TaskUpsertDto dto) {
-        return ResponseEntity.ok(service.update(id, dto));
+        TaskResponseDto updated = service.update(id, dto);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
