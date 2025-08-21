@@ -76,12 +76,14 @@ public class SecurityConfig {
     }
 
     @Bean
+    @Profile("!test")
     public JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String secret) {
         SecretKeySpec key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
     }
 
     @Bean
+    @Profile("!test")
     public JwtEncoder jwtEncoder(@Value("${app.jwt.secret}") String secret) {
         SecretKeySpec key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         return new NimbusJwtEncoder(new ImmutableSecret<>(key));
