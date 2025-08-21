@@ -5,6 +5,10 @@ import hexlet.code.dto.users.UserResponseDto;
 import hexlet.code.dto.users.UserUpdateDto;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -84,7 +88,14 @@ public class UsersServiceImpl implements UsersService {
                 user.getEmail(),
                 user.getFirstName(),
                 user.getLastName(),
-                user.getCreatedAt()
+                toLocalDate(user.getCreatedAt())
         );
+    }
+
+    private static LocalDate toLocalDate(Instant instant) {
+        if (instant == null) {
+            return null;
+        }
+        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC).toLocalDate();
     }
 }
