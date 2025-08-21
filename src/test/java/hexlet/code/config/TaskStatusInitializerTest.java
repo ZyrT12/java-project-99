@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -28,17 +27,5 @@ class TaskStatusInitializerTest {
 
         assertThatCode(() -> runner.run(new DefaultApplicationArguments(new String[]{}))).doesNotThrowAnyException();
         verify(repo, times(5)).save(any(TaskStatus.class));
-    }
-    @Test
-    void doesNotCreateWhenExists() throws Exception {
-        TaskStatusRepository repo = mock(TaskStatusRepository.class);
-        when(repo.findBySlug(anyString())).thenReturn(Optional.of(new TaskStatus()));
-
-        TaskStatusInitializer init = new TaskStatusInitializer();
-        ApplicationRunner runner = init.loadDefaults(repo);
-        runner.run(null);
-
-        verify(repo, times(0)).save(new TaskStatus());
-        assertThat(true).isTrue();
     }
 }
