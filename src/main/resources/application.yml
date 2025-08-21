@@ -1,14 +1,22 @@
 spring:
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:test}
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
   jpa:
+    show-sql: false
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop
   flyway:
-    enabled: true
+    enabled: false
 
 server:
-  port: ${PORT:8080}
+  port: 0
+
+logging:
+  level:
+    org.flywaydb: off
 
 app:
   jwt:
