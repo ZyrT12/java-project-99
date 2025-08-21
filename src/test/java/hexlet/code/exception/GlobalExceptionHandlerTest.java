@@ -18,7 +18,9 @@ class GlobalExceptionHandlerTest {
     @Test
     void onAuthReturns401() {
         GlobalExceptionHandler h = new GlobalExceptionHandler();
-        ResponseEntity<Void> r = h.onAuth(new AuthenticationException("bad"){});
+        ResponseEntity<Void> r = h.onAuth(new AuthenticationException("bad") {
+
+        });
         assertThat(r.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
@@ -40,7 +42,9 @@ class GlobalExceptionHandlerTest {
     void onValidationReturns422WithErrors() throws Exception {
         GlobalExceptionHandler h = new GlobalExceptionHandler();
 
-        class DummyTarget { private String name; public String getName(){ return name; } public void setName(String n){ this.name = n; } }
+        class DummyTarget { private String name; public String getName() {
+            return name; } public void setName(String n){ this.name = n; }
+        }
 
         DummyTarget target = new DummyTarget();
         BeanPropertyBindingResult binding = new BeanPropertyBindingResult(target, "dummy");
