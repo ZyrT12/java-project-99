@@ -34,9 +34,9 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+	implementation("org.springframework.security:spring-security-oauth2-jose")
 
 	runtimeOnly("com.h2database:h2:2.2.224")
-
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 
 	implementation("org.mindrot:jbcrypt:0.4")
@@ -52,7 +52,6 @@ dependencies {
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
-	testImplementation("org.springframework.security:spring-security-oauth2-jose")
 	testImplementation("io.rest-assured:rest-assured:5.4.0")
 	testImplementation("org.assertj:assertj-core:3.26.0")
 	testImplementation("com.h2database:h2:2.2.224")
