@@ -35,18 +35,22 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(h -> h.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(h ->
+                        h.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico", "/actuator/health").permitAll()
+                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico",
+                                "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .anyRequest().authenticated()
-                );
+           );
 
         if (enableJwt) {
-            http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+            http.oauth2ResourceServer(oauth2 ->
+                    oauth2.jwt(Customizer.withDefaults()));
         } else {
             http.oauth2ResourceServer(AbstractHttpConfigurer::disable);
         }
