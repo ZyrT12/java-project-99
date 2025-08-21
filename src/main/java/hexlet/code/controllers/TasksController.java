@@ -20,7 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = {"/api/tasks", "/api/tasks/", "/api/task", "/api/task/"}, produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = {"/api/tasks", "/api/tasks/", "/api/task", "/api/task/"},
+        produces = MediaType.APPLICATION_JSON_VALUE)
 public class TasksController {
 
     private final TaskService service;
