@@ -2,7 +2,7 @@ package hexlet.code.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hexlet.code.repository.UserRepository;
-import java.time.Instant;
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,9 +29,9 @@ public class UserModelTest {
         User saved = userRepository.save(u);
 
         assertThat(saved.getCreatedAt()).isNotNull();
-        assertThat(saved.getCreatedAt()).isInstanceOf(Instant.class);
+        assertThat(saved.getCreatedAt()).isInstanceOf(LocalDate.class);
 
         String json = objectMapper.writeValueAsString(saved);
-        assertThat(json).contains("\"createdAt\"");
+        assertThat(json).contains("createdAt");
     }
 }

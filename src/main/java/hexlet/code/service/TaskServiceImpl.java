@@ -172,7 +172,7 @@ public class TaskServiceImpl implements TaskService {
         dto.setTaskLabelIds(t.getLabels() != null
                 ? t.getLabels().stream().map(Label::getId).collect(Collectors.toList())
                 : List.of());
-        dto.setCreatedAt(java.time.LocalDateTime.ofInstant(t.getCreatedAt(), java.time.ZoneOffset.UTC).toLocalDate());
+        dto.setCreatedAt(t.getCreatedAt());
         dto.setIndex(t.getIndex());
         return dto;
     }

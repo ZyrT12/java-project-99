@@ -5,11 +5,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.time.Instant;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "task_statuses")
@@ -30,14 +29,7 @@ public class TaskStatus {
     private String slug;
 
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
-
-    @PrePersist
-    void onCreate() {
-        if (createdAt == null) {
-            createdAt = Instant.now();
-        }
-    }
+    private LocalDate createdAt = LocalDate.now();
 
     public TaskStatus() {
     }
@@ -59,7 +51,7 @@ public class TaskStatus {
         return slug;
     }
 
-    public Instant getCreatedAt() {
+    public LocalDate getCreatedAt() {
         return createdAt;
     }
 
@@ -73,9 +65,5 @@ public class TaskStatus {
 
     public void setSlug(String slug) {
         this.slug = slug;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
     }
 }
