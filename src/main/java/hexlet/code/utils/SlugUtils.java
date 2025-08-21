@@ -2,25 +2,24 @@ package hexlet.code.utils;
 
 import java.text.Normalizer;
 import java.util.Locale;
-import java.util.UUID;
+import java.util.regex.Pattern;
 
 public final class SlugUtils {
-    private SlugUtils() {
-    }
+    private static final Pattern NON_ALNUM = Pattern.compile("[^\\p{Alnum}]+");
+    private static final Pattern DASH_RUNS = Pattern.compile("-+");
+    private static final Pattern EDGE_DASH = Pattern.compile("(^-|-$)");
 
-    public static String slugify(String input) {
-        if (input == null) {
-            return null;
+    private SlugUtils() { }
+
+    public static String slugify(String raw) {
+        if (raw == null) {
+            return "";
         }
-        String s = Normalizer.normalize(input, Normalizer.Form.NFD);
-        s = s.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
-        s = s.toLowerCase(Locale.ROOT);
-        s = s.replaceAll("[^a-z0-9]+", "-");
-        s = s.replaceAll("^-+|-+$", "");
-        s = s.replaceAll("-{2,}", "-");
-        if (s.isEmpty()) {
-            s = UUID.randomUUID().toString();
-        }
+        String s = Normalizer.normalize(raw, Normalizer.Form.NFKD)
+                .toLowerCase(Locale.ROOT);
+        s = NON_ALNUM.matcher(s).replaceAll("-");
+        s = DASH_RUNS.matcher(s).replaceAll("-");
+        s = EDGE_DASH.matcher(s).replaceAll("");
         return s;
     }
 }
