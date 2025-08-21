@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 public final class SlugUtils {
     private static final Pattern NON_ALNUM = Pattern.compile("[^\\p{Alnum}]+");
     private static final Pattern DASH_RUNS = Pattern.compile("-+");
-    private static final Pattern EDGE_DASH = Pattern.compile("(^-|-$)");
+    private static final Pattern EDGE_DASH = Pattern.compile("(?:(?<=^)-|-(?=$))");
 
     private SlugUtils() { }
 
