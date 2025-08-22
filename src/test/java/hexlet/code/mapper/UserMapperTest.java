@@ -1,5 +1,6 @@
-package hexlet.code.dto.users;
+package hexlet.code.mapper;
 
+import hexlet.code.dto.users.UserResponseDto;
 import hexlet.code.model.User;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -8,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserMapperTest {
 
     @Test
-    void toDto_mapsFields() {
+    void toDtoMapsFields() {
         User u = new User();
         u.setEmail("john.doe@example.com");
         u.setFirstName("John");
