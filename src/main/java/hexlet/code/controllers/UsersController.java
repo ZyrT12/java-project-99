@@ -3,12 +3,13 @@ package hexlet.code.controllers;
 import hexlet.code.dto.users.UserCreateDto;
 import hexlet.code.dto.users.UserResponseDto;
 import hexlet.code.dto.users.UserUpdateDto;
-import hexlet.code.security.OwnershipService;
 import hexlet.code.service.UsersService;
 import jakarta.validation.Valid;
+import java.net.URI;
 import java.util.List;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,47 +17,62 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/users")
 public class UsersController {
 
-    private final UsersService usersService;
-    private final OwnershipService ownershipService;
+    private final UsersService service;
 
-    public UsersController(UsersService usersService, OwnershipService ownershipService) {
-        this.usersService = usersService;
-        this.ownershipService = ownershipService;
+    public UsersController(UsersService service) {
+        this.service = service;
     }
 
     @GetMapping
-    public List<UserResponseDto> index() {
-        return usersService.getAll();
+    public ResponseEntity<List<UserResponseDto>> index(
+            @RequestParam(name = "_start", required = false) Integer start,
+            @RequestParam(name = "_end", required = false) Integer end
+    ) {
+        List<UserResponseDto> all = service.getAll();
+        int total = all.size();
+
+        int s = start != null ? Math.max(0, start) : 0;
+        int e = end != null ? Math.min(end, total) : total;
+        if (e < s) {
+            e = s;
+        }
+
+        List<UserResponseDto> slice = all.subList(Math.min(s, total), Math.min(e, total));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", String.valueOf(total));
+
+        return new ResponseEntity<>(slice, headers, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public UserResponseDto show(@PathVariable Long id) {
-        return usersService.getById(id);
+    public UserResponseDto show(@PathVariable long id) {
+        return service.getById(id);
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserResponseDto create(@Valid @RequestBody UserCreateDto dto) {
-        return usersService.create(dto);
+    public ResponseEntity<UserResponseDto> create(@RequestBody @Valid UserCreateDto data) {
+        UserResponseDto created = service.create(data);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create("/api/users/" + created.id()));
+        return new ResponseEntity<>(created, headers, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@ownershipService.isSelf(#id)")
-    public UserResponseDto update(@PathVariable Long id, @Valid @RequestBody UserUpdateDto dto) {
-        return usersService.update(id, dto);
+    public UserResponseDto update(@PathVariable long id, @RequestBody @Valid UserUpdateDto data) {
+        return service.update(id, data);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("@ownershipService.isSelf(#id)")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        usersService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
