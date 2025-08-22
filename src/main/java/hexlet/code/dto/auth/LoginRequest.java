@@ -1,11 +1,11 @@
 package hexlet.code.dto.auth;
 
-import jakarta.validation.constraints.Email;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
     @NotBlank
-    @Email
+    @JsonAlias({"username", "email"})
     private String email;
 
     @NotBlank
