@@ -5,11 +5,11 @@ import jakarta.validation.constraints.Size;
 
 public class TaskStatusUpsertDto {
 
-    @NotBlank(groups = {OnCreate.class, OnUpdate.class})
+    @NotBlank(groups = {OnCreate.class})
     @Size(min = 2, max = 255, groups = {OnCreate.class, OnUpdate.class})
     private String name;
 
-    @NotBlank(groups = {OnCreate.class, OnUpdate.class})
+    @NotBlank(groups = {OnCreate.class})
     @Size(min = 2, max = 255, groups = {OnCreate.class, OnUpdate.class})
     private String slug;
 

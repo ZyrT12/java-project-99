@@ -4,11 +4,14 @@ import hexlet.code.dto.tasks.TaskResponseDto;
 import hexlet.code.dto.tasks.TaskUpsertDto;
 import hexlet.code.service.TaskService;
 import jakarta.validation.Valid;
-import java.net.URI;
 import java.util.List;
+import java.util.NoSuchElementException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,13 +40,14 @@ public class TasksController {
             @RequestParam(name = "status", required = false) String statusSlug,
             @RequestParam(name = "labelId", required = false) Long labelId
     ) {
-        List<TaskResponseDto> filtered = service.list(titleCont, assigneeId, statusSlug, labelId);
-
-        int total = filtered.size();
-        int from = start != null ? Math.max(0, start) : 0;
-        int to = end != null ? Math.min(total, end) : total;
-        List<TaskResponseDto> page = filtered.subList(from, to);
-
+        List<TaskResponseDto> all = service.list(titleCont, assigneeId, statusSlug, labelId);
+        int total = all.size();
+        int from = start == null ? 0 : Math.max(0, start);
+        int to = end == null ? total : Math.min(total, end);
+        if (from > to) {
+            from = to;
+        }
+        List<TaskResponseDto> page = all.subList(from, to);
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(total));
         return ResponseEntity.ok().headers(headers).body(page);
@@ -51,17 +55,13 @@ public class TasksController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponseDto> show(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(service.get(id));
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        return ResponseEntity.ok(service.get(id));
     }
 
     @PostMapping
     public ResponseEntity<TaskResponseDto> create(@Valid @RequestBody TaskUpsertDto dto) {
-        TaskResponseDto saved = service.create(dto);
-        return ResponseEntity.created(URI.create("/api/tasks/" + saved.getId())).body(saved);
+        TaskResponseDto created = service.create(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
@@ -74,5 +74,15 @@ public class TasksController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<Void> handleNotFound(NoSuchElementException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class})
+    public ResponseEntity<String> handleUnprocessable(Exception e) {
+        return ResponseEntity.unprocessableEntity().body(e.getMessage());
     }
 }

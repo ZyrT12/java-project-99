@@ -13,4 +13,5 @@ This application is a task management system. It allows you to set tasks, assign
 Приложение деплоится на Render.com:  
 👉 https://java-project-99-61wv.onrender.com
 login: `admin@local`  password: `admin123`
+**Note: render.com warning: "Your free instance will spin down with inactivity, which can delay requests by 50 seconds or more." If the link above does not work, try visiting it in a minute or two.**
 

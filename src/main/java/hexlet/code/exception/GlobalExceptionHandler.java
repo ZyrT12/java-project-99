@@ -27,18 +27,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Void> onNotFound(EntityNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-    @ExceptionHandler(EmptyResultDataAccessException.class)
-    public ResponseEntity<Void> onNotFound(EmptyResultDataAccessException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<Void> onNotFound(NoSuchElementException ex) {
+    @ExceptionHandler({
+        EntityNotFoundException.class,
+        EmptyResultDataAccessException.class,
+        NoSuchElementException.class
+    })
+    public ResponseEntity<Void> onNotFound(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
@@ -50,10 +44,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> onValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        for (var e : ex.getBindingResult().getAllErrors()) {
+        ex.getBindingResult().getAllErrors().forEach(e -> {
             String field = e instanceof FieldError fe ? fe.getField() : e.getObjectName();
             errors.put(field, e.getDefaultMessage());
-        }
+        });
         HttpHeaders headers = new HttpHeaders();
         return new ResponseEntity<>(errors, headers, HttpStatus.UNPROCESSABLE_ENTITY);
     }

@@ -10,16 +10,18 @@ import hexlet.code.repository.LabelRepository;
 import hexlet.code.repository.TaskRepository;
 import hexlet.code.repository.TaskStatusRepository;
 import hexlet.code.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TaskServiceImpl implements TaskService {
+
     private final TaskRepository taskRepo;
     private final TaskStatusRepository statusRepo;
     private final UserRepository userRepo;
@@ -37,129 +39,93 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponseDto get(Long id) {
-        Task t = taskRepo.findById(id).orElseThrow(NoSuchElementException::new);
-        return toDto(t);
+        Task task = taskRepo.findById(id).orElseThrow(NoSuchElementException::new);
+        return toDto(task);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskResponseDto> list() {
+        return taskRepo.findAll().stream().map(this::toDto).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TaskResponseDto> list(String titleCont,
+                                      Long assigneeId,
+                                      String statusSlug,
+                                      Long labelId) {
+        return taskRepo.findAll().stream()
+                .filter(t -> titleCont == null || containsIgnoreCase(t.getTitle(), titleCont))
+                .filter(t -> assigneeId == null || hasAssignee(t, assigneeId))
+                .filter(t -> statusSlug == null || hasStatusSlug(t, statusSlug))
+                .filter(t -> labelId == null || hasLabel(t, labelId))
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public List<TaskResponseDto> list() {
-        return taskRepo.findAll().stream().map(this::toDto).toList();
-    }
-
-    @Override
-    @Transactional(Transactional.TxType.REQUIRED)
     public TaskResponseDto create(TaskUpsertDto dto) {
         Task task = new Task();
-        if (dto.getTitle() != null) {
-            task.setTitle(dto.getTitle());
-        }
-        if (dto.getContent() != null || dto.getDescription() != null) {
-            task.setContent(dto.getContent() != null ? dto.getContent() : dto.getDescription());
-        }
-        if (dto.getStatus() != null) {
-            TaskStatus status = statusRepo.findBySlug(dto.getStatus()).orElseThrow();
-            task.setTaskStatus(status);
-        } else if (dto.getTaskStatusId() != null) {
-            TaskStatus status = statusRepo.findById(dto.getTaskStatusId()).orElseThrow();
-            task.setTaskStatus(status);
-        }
-        if (task.getTaskStatus() == null) {
-            TaskStatus defaultStatus = statusRepo.findBySlug("new")
-                    .orElseGet(() -> statusRepo.findAll().stream().findFirst().orElseThrow());
-            task.setTaskStatus(defaultStatus);
-        }
-        if (dto.getAssigneeId() != null) {
-            if (dto.getAssigneeId() == 0L) {
-                task.setAssignee(null);
-            } else {
-                User user = userRepo.findById(dto.getAssigneeId()).orElseThrow();
-                task.setAssignee(user);
-            }
-        } else if (dto.getExecutorId() != null) {
-            if (dto.getExecutorId() == 0L) {
-                task.setAssignee(null);
-            } else {
-                User user = userRepo.findById(dto.getExecutorId()).orElseThrow();
-                task.setAssignee(user);
-            }
-        }
-        List<Long> labelIds = dto.getTaskLabelIds() != null ? dto.getTaskLabelIds() : dto.getLabelIds();
-        if (labelIds != null && !labelIds.isEmpty()) {
-            Set<Label> labels = new HashSet<>(labelRepo.findAllById(labelIds));
-            task.setLabels(labels);
-        } else {
-            task.setLabels(Set.of());
-        }
+        applyUpsert(task, dto, true);
         Task saved = taskRepo.save(task);
         return toDto(saved);
     }
 
     @Override
-    @Transactional(Transactional.TxType.REQUIRED)
+    @Transactional
     public TaskResponseDto update(Long id, TaskUpsertDto dto) {
         Task task = taskRepo.findById(id).orElseThrow(NoSuchElementException::new);
+        applyUpsert(task, dto, false);
+        Task saved = taskRepo.save(task);
+        return toDto(saved);
+    }
+
+    @Override
+    public void delete(Long id) {
+        Task task = taskRepo.findById(id).orElseThrow(NoSuchElementException::new);
+        taskRepo.delete(task);
+    }
+
+    private void applyUpsert(Task task, TaskUpsertDto dto, boolean isCreate) {
         if (dto.getTitle() != null) {
             task.setTitle(dto.getTitle());
         }
-        if (dto.getContent() != null || dto.getDescription() != null) {
-            task.setContent(dto.getContent() != null ? dto.getContent() : dto.getDescription());
+        if (dto.getContent() != null) {
+            task.setContent(dto.getContent());
         }
-        if (dto.getStatus() != null) {
-            TaskStatus status = statusRepo.findBySlug(dto.getStatus()).orElseThrow();
-            task.setTaskStatus(status);
-        } else if (dto.getTaskStatusId() != null) {
-            TaskStatus status = statusRepo.findById(dto.getTaskStatusId()).orElseThrow();
-            task.setTaskStatus(status);
-        }
+
         if (dto.getAssigneeId() != null) {
             if (dto.getAssigneeId() == 0L) {
                 task.setAssignee(null);
             } else {
-                User assignee = userRepo.findById(dto.getAssigneeId()).orElseThrow();
-                task.setAssignee(assignee);
-            }
-        } else if (dto.getExecutorId() != null) {
-            if (dto.getExecutorId() == 0L) {
-                task.setAssignee(null);
-            } else {
-                User assignee = userRepo.findById(dto.getExecutorId()).orElseThrow();
+                User assignee = userRepo.findById(dto.getAssigneeId()).orElseThrow(NoSuchElementException::new);
                 task.setAssignee(assignee);
             }
         }
-        List<Long> labelIds = dto.getTaskLabelIds() != null ? dto.getTaskLabelIds() : dto.getLabelIds();
+
+        String statusSlug = dto.getStatus();
+        Long statusId = firstPresentLong(dto, "getStatusId", "getTaskStatusId");
+        if (statusSlug != null) {
+            TaskStatus st = statusRepo.findBySlug(statusSlug).orElseThrow(NoSuchElementException::new);
+            task.setTaskStatus(st);
+        } else if (statusId != null) {
+            TaskStatus st = statusRepo.findById(statusId).orElseThrow(NoSuchElementException::new);
+            task.setTaskStatus(st);
+        } else if (isCreate) {
+            TaskStatus st = statusRepo.findBySlug("new").orElseThrow(NoSuchElementException::new);
+            task.setTaskStatus(st);
+        }
+
+        List<Long> labelIds = dto.getLabelIds();
+        if (labelIds == null) {
+            labelIds = firstPresentListLong(dto, "getTaskLabelIds");
+        }
         if (labelIds != null) {
             Set<Label> labels = new HashSet<>(labelRepo.findAllById(labelIds));
             task.setLabels(labels);
         }
-        Task saved = taskRepo.save(task);
-        return toDto(saved);
-    }
-
-    @Override
-    @Transactional(Transactional.TxType.REQUIRED)
-    public void delete(Long id) {
-        if (!taskRepo.existsById(id)) {
-            throw new NoSuchElementException("Task not found: " + id);
-        }
-        taskRepo.deleteById(id);
-    }
-
-    @Override
-    @Transactional(Transactional.TxType.REQUIRED)
-    public List<TaskResponseDto> list(String titleCont, Long assigneeId, String statusSlug, Long labelId) {
-        return taskRepo.findAll().stream()
-                .filter(t -> titleCont == null
-                        || t.getTitle().toLowerCase().contains(titleCont.toLowerCase()))
-                .filter(t -> assigneeId == null
-                        || (t.getAssignee() != null && assigneeId.equals(t.getAssignee().getId())))
-                .filter(t -> statusSlug == null
-                        || (t.getTaskStatus() != null && statusSlug.equals(t.getTaskStatus().getSlug())))
-                .filter(t -> labelId == null
-                        || (t.getLabels() != null && t.getLabels()
-                        .stream().anyMatch(l -> labelId.equals(l.getId()))))
-                .map(this::toDto)
-                .toList();
     }
 
     private TaskResponseDto toDto(Task t) {
@@ -169,11 +135,62 @@ public class TaskServiceImpl implements TaskService {
         dto.setContent(t.getContent());
         dto.setStatus(t.getTaskStatus() != null ? t.getTaskStatus().getSlug() : null);
         dto.setAssigneeId(t.getAssignee() != null ? t.getAssignee().getId() : null);
-        dto.setTaskLabelIds(t.getLabels() != null
+        dto.setLabelIds(t.getLabels() != null
                 ? t.getLabels().stream().map(Label::getId).collect(Collectors.toList())
                 : List.of());
         dto.setCreatedAt(t.getCreatedAt());
         dto.setIndex(t.getIndex());
         return dto;
+    }
+
+    private static boolean containsIgnoreCase(String source, String needle) {
+        return source != null && needle != null && source.toLowerCase().contains(needle.toLowerCase());
+    }
+
+    private static boolean hasAssignee(Task t, Long assigneeId) {
+        return t.getAssignee() != null && assigneeId.equals(t.getAssignee().getId());
+    }
+
+    private static boolean hasStatusSlug(Task t, String slug) {
+        return t.getTaskStatus() != null && slug.equals(t.getTaskStatus().getSlug());
+    }
+
+    private static boolean hasLabel(Task t, Long labelId) {
+        return t.getLabels() != null && t.getLabels().stream().map(Label::getId).anyMatch(id -> id.equals(labelId));
+    }
+
+    private static Long firstPresentLong(Object target, String... getters) {
+        for (String g : getters) {
+            Long v = tryGetLong(target, g);
+            if (v != null) {
+                return v;
+            }
+        }
+        return null;
+    }
+
+    private static Long tryGetLong(Object target, String getterName) {
+        try {
+            Method m = target.getClass().getMethod(getterName);
+            Object v = m.invoke(target);
+            return v == null ? null : (Long) v;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Long> firstPresentListLong(Object target, String... getters) {
+        for (String g : getters) {
+            try {
+                Method m = target.getClass().getMethod(g);
+                Object v = m.invoke(target);
+                if (v != null) {
+                    return (List<Long>) v;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
     }
 }
