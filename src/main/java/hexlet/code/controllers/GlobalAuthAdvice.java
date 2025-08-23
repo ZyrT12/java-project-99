@@ -19,23 +19,22 @@ public class GlobalAuthAdvice {
         BindException.class
     })
     public ResponseEntity<Map<String, String>> handleBodyErrors(Exception ex, HttpServletRequest req) {
-        String uri = req.getRequestURI();
-        if ("/api/login".equals(uri) || "/login".equals(uri)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid credentials"));
+        if (isLoginPath(req)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", "Bad request"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Bad request"));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleAny(Exception ex, HttpServletRequest req) {
-        String uri = req.getRequestURI();
-        if ("/api/login".equals(uri) || "/login".equals(uri)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid credentials"));
+        if (isLoginPath(req)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid credentials"));
         }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Internal server error"));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Internal server error"));
+    }
+
+    private boolean isLoginPath(HttpServletRequest req) {
+        String uri = req.getRequestURI();
+        return "/api/login".equals(uri) || "/login".equals(uri);
     }
 }
