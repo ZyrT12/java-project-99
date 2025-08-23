@@ -3,10 +3,13 @@ package hexlet.code.controllers;
 import hexlet.code.dto.tasks.OnCreate;
 import hexlet.code.dto.tasks.OnUpdate;
 import hexlet.code.dto.tasks.TaskStatusUpsertDto;
+import hexlet.code.dto.tasks.TaskStatusResponseDto;
+import hexlet.code.mapper.TaskStatusMapper;
 import hexlet.code.model.TaskStatus;
 import hexlet.code.service.TaskStatusService;
 import java.net.URI;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,63 +22,60 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping({"/api/task-statuses", "/api/task_statuses"})
 public class TaskStatusController {
 
     private final TaskStatusService service;
+    private final TaskStatusMapper taskStatusMapper;
 
-    public TaskStatusController(TaskStatusService service) {
+    public TaskStatusController(TaskStatusService service, TaskStatusMapper taskStatusMapper) {
         this.service = service;
+        this.taskStatusMapper = taskStatusMapper;
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskStatus>> index(
-            @RequestParam(name = "_start", required = false) Integer start,
-            @RequestParam(name = "_end", required = false) Integer end
-    ) {
-        List<TaskStatus> all = service.findAll();
-        int total = all.size();
-        int from = start != null ? Math.max(0, start) : 0;
-        int to = end != null ? Math.min(total, end) : total;
-        List<TaskStatus> page = all.subList(from, to);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", String.valueOf(total));
-        return ResponseEntity.ok().headers(headers).body(page);
+    public ResponseEntity<List<TaskStatusResponseDto>> index() {
+        List<TaskStatus> list = service.findAll();
+        List<TaskStatusResponseDto> body = list.stream().map(taskStatusMapper::toDto).collect(Collectors.toList());
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TaskStatus> show(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(service.findById(id));
-        } catch (jakarta.persistence.EntityNotFoundException ex) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<TaskStatusResponseDto> show(@PathVariable Long id) {
+        TaskStatus status = service.findById(id);
+        return ResponseEntity.ok(taskStatusMapper.toDto(status));
     }
 
     @PostMapping
-        public ResponseEntity<TaskStatus> create(@Validated(OnCreate.class) @RequestBody TaskStatusUpsertDto dto) {
+    public ResponseEntity<TaskStatusResponseDto> create(@Validated(OnCreate.class)
+                                                            @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus saved = service.create(dto);
-        return ResponseEntity.created(URI.create("/api/task-statuses/" + saved.getId())).body(saved);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create("/api/task-statuses/" + saved.getId()));
+        return ResponseEntity.created(URI.create("/api/task-statuses/" + saved.getId()))
+                .headers(headers)
+                .body(taskStatusMapper.toDto(saved));
     }
 
     @PatchMapping("/{id}")
-        public ResponseEntity<TaskStatus> patch(@PathVariable Long id, @Validated(OnUpdate.class)
-        @RequestBody TaskStatusUpsertDto dto) {
+    public ResponseEntity<TaskStatusResponseDto> updatePartial(@PathVariable Long id,
+                                                               @Validated(OnUpdate.class)
+                                                               @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus updated = service.updatePartial(id, dto);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(taskStatusMapper.toDto(updated));
     }
 
     @PutMapping("/{id}")
-        public ResponseEntity<TaskStatus> update(@PathVariable Long id, @RequestBody TaskStatusUpsertDto dto) {
+    public ResponseEntity<TaskStatusResponseDto> update(@PathVariable Long id,
+                                                        @RequestBody TaskStatusUpsertDto dto) {
         TaskStatus updated = service.updatePartial(id, dto);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(taskStatusMapper.toDto(updated));
     }
 
     @DeleteMapping("/{id}")
-        public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
