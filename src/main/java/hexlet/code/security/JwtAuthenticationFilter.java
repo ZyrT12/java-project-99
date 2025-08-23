@@ -36,29 +36,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return true;
         }
         String[] publicPatterns = new String[] {
-                "/",
-                "/index.html",
-                "/favicon.ico",
-                "/assets/**",
-                "/css/**",
-                "/js/**",
-                "/images/**",
-                "/static/**",
-                "/actuator/health",
-                "/v3/api-docs/**",
-                "/swagger-ui/**",
-                "/swagger-ui.html",
-                "/api/login",
-                "/api/users",
-                "/api/users/**",
-                "/api/tasks",
-                "/api/tasks/**",
-                "/api/task-statuses",
-                "/api/task-statuses/**",
-                "/api/task_statuses",
-                "/api/task_statuses/**",
-                "/api/labels",
-                "/api/labels/**"
+            "/",
+            "/index.html",
+            "/favicon.ico",
+            "/assets/**",
+            "/css/**",
+            "/js/**",
+            "/images/**",
+            "/static/**",
+            "/actuator/health",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/api/login",
+            "/api/users",
+            "/api/users/**",
+            "/api/tasks",
+            "/api/tasks/**",
+            "/api/task-statuses",
+            "/api/task-statuses/**",
+            "/api/task_statuses",
+            "/api/task_statuses/**",
+            "/api/labels",
+            "/api/labels/**"
         };
         for (String pattern : publicPatterns) {
             if (matcher.match(pattern, uri)) {
@@ -78,7 +78,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Optional<DecodedJWT> decoded = jwtService.verify(token);
             if (decoded.isPresent()) {
                 String subject = decoded.get().getSubject();
-                Authentication auth = new UsernamePasswordAuthenticationToken(subject, null, Collections.emptyList());
+                Authentication auth = new UsernamePasswordAuthenticationToken(
+                        subject,
+                        null,
+                        Collections.emptyList()
+                );
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } else {
                 SecurityContextHolder.clearContext();
