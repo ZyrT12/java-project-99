@@ -16,3 +16,5 @@ login: `admin@local`  password: `admin123`
 
 ***Note: render.com warning: "Your free instance will spin down with inactivity, which can delay requests by 50 seconds or more." If the link above does not work, try visiting it in a minute or two.***
 
+**And one more warning: "You’ve used up the maximum number of pipeline minutes specified by your spend limit."**
+
