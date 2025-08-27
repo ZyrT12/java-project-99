@@ -30,9 +30,7 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public List<UserResponseDto> getAll() {
-        return userRepository.findAll().stream()
-                .map(userMapper::toResponse)
-                .toList();
+        return userRepository.findAll().stream().map(userMapper::toResponse).toList();
     }
 
     @Override
@@ -44,8 +42,7 @@ public class UsersServiceImpl implements UsersService {
     @Transactional
     public UserResponseDto create(UserCreateDto dto) {
         User user = userMapper.fromCreate(dto);
-        String encoded = passwordEncoder.encode(dto.password());
-        user.setPasswordHash(encoded);
+        user.setPasswordHash(passwordEncoder.encode(dto.password()));
         User saved = userRepository.save(user);
         return userMapper.toResponse(saved);
     }
@@ -55,7 +52,7 @@ public class UsersServiceImpl implements UsersService {
     public UserResponseDto update(Long id, UserUpdateDto dto) {
         User user = userRepository.findById(id).orElseThrow(NoSuchElementException::new);
         userMapper.update(user, dto);
-        if (dto.password() != null) {
+        if (dto.password() != null && !dto.password().isBlank()) {
             user.setPasswordHash(passwordEncoder.encode(dto.password()));
         }
         User saved = userRepository.save(user);

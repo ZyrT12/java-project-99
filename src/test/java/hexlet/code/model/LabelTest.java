@@ -8,16 +8,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class LabelTest {
 
+    // --- уже существующие тесты ---
     @Test
     void onCreateSetsCreatedAtAndSlug() {
         Label label = new Label();
         label.setName("My Label");
 
-        // до вызова
         assertThat(label.getCreatedAt()).isNull();
         assertThat(label.getSlug()).isNull();
 
-        // симуляция JPA persist
         label.onCreate();
 
         assertThat(label.getCreatedAt()).isNotNull();
@@ -60,5 +59,51 @@ class LabelTest {
         assertThat(label.getName()).isEqualTo("TestName");
         assertThat(label.getSlug()).isEqualTo("test-slug");
         assertThat(label.getCreatedAt()).isEqualTo(now);
+    }
+
+
+    @Test
+    void equalsTrueWhenSameId() {
+        Label a = new Label();
+        a.setId(1L);
+        a.setName("A");
+        Label b = new Label();
+        b.setId(1L);
+        b.setName("B");
+
+        assertThat(a).isEqualTo(b);
+        assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    }
+
+    @Test
+    void equalsTrueWhenIdNullButNamesEqual() {
+        Label a = new Label();
+        a.setName("Backend");
+        Label b = new Label();
+        b.setName("Backend");
+
+        assertThat(a).isEqualTo(b);
+        assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    }
+
+    @Test
+    void equalsFalseWhenDifferentIdOrName() {
+        Label a = new Label();
+        a.setId(2L);
+        a.setName("X");
+        Label b = new Label();
+        b.setId(3L);
+        b.setName("Y");
+
+        assertThat(a).isNotEqualTo(b);
+    }
+
+    @Test
+    void equalsHandlesNullAndOtherClass() {
+        Label a = new Label();
+        a.setName("Z");
+
+        assertThat(a.equals(null)).isFalse();
+        assertThat(a.equals("not a label")).isFalse();
     }
 }
