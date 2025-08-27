@@ -2,6 +2,7 @@ package hexlet.code.service;
 
 import hexlet.code.dto.tasks.TaskResponseDto;
 import hexlet.code.dto.tasks.TaskUpsertDto;
+import hexlet.code.mapper.TaskMapper;
 import hexlet.code.model.Label;
 import hexlet.code.model.Task;
 import hexlet.code.model.TaskStatus;
@@ -37,6 +38,7 @@ class TaskServiceImplTest {
     private UserRepository userRepository;
     private LabelRepository labelRepository;
     private TaskServiceImpl service;
+    private TaskMapper taskMapper;
 
     @BeforeEach
     void setUp() {
@@ -44,7 +46,9 @@ class TaskServiceImplTest {
         statusRepository = mock(TaskStatusRepository.class);
         userRepository = mock(UserRepository.class);
         labelRepository = mock(LabelRepository.class);
-        service = new TaskServiceImpl(taskRepository, statusRepository, userRepository, labelRepository);
+        taskMapper = mock(TaskMapper.class);
+
+        service = new TaskServiceImpl(taskRepository, statusRepository, userRepository, labelRepository, taskMapper);
     }
 
     @Test

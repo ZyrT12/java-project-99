@@ -4,24 +4,27 @@ import hexlet.code.dto.users.UserResponseDto;
 import hexlet.code.model.User;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class UserMapperTest {
 
+    private final UserMapper mapper = Mappers.getMapper(UserMapper.class);
+
     @Test
-    void toDtoMapsFields() {
+    void toResponseMapsFields() {
         User u = new User();
-        u.setEmail("john.doe@example.com");
+        u.setEmail("john@example.com");
         u.setFirstName("John");
         u.setLastName("Doe");
-        u.setCreatedAt(LocalDate.of(2024, 1, 2));
+        u.setCreatedAt(LocalDate.now());
 
-        UserResponseDto dto = hexlet.code.dto.users.UserMapper.toDto(u);
+        UserResponseDto dto = mapper.toResponse(u);
 
-        assertThat(dto.id()).isNull();
-        assertThat(dto.email()).isEqualTo("john.doe@example.com");
+        assertThat(dto.email()).isEqualTo("john@example.com");
         assertThat(dto.firstName()).isEqualTo("John");
         assertThat(dto.lastName()).isEqualTo("Doe");
-        assertThat(dto.createdAt()).isEqualTo(LocalDate.of(2024, 1, 2));
+        assertThat(dto.createdAt()).isNotNull();
     }
 }

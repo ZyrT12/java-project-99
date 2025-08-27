@@ -8,7 +8,11 @@ import hexlet.code.security.JwtService;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,46 +23,47 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api")
 public class AuthController {
 
+    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthController(UserRepository userRepository,
-                          PasswordEncoder passwordEncoder,
+    public AuthController(AuthenticationManager authenticationManager,
+                          UserRepository userRepository,
                           JwtService jwtService) {
+        this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody(required = false) LoginRequest request) {
         if (request == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
+        try {
+            String email = request.getEmail();
+            String password = request.getPassword();
+            if (!StringUtils.hasText(email) || !StringUtils.hasText(password)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-        String principal = request.getEmail();
-        if (principal == null || principal.isBlank()) {
-            principal = request.getUsername();
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password)
+            );
+
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Long userId = userOpt.get().getId();
+            String token = jwtService.issue(userId, email);
+            return ResponseEntity.ok(new LoginResponse(token));
+
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        String password = request.getPassword();
-
-        if (principal == null || principal.isBlank() || password == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-        }
-
-        Optional<User> userOpt = userRepository.findByEmail(principal);
-        if (userOpt.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-        }
-
-        User user = userOpt.get();
-        String hash = user.getPasswordHash();
-        if (hash == null || !passwordEncoder.matches(password, hash)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
-        }
-
-        String token = jwtService.issue(user.getId(), user.getEmail());
-        return ResponseEntity.ok(new LoginResponse(token));
     }
 }

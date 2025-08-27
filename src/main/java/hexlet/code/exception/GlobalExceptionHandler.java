@@ -1,16 +1,14 @@
 package hexlet.code.exception;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
-@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -27,12 +24,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    @ExceptionHandler({
-        EntityNotFoundException.class,
-        EmptyResultDataAccessException.class,
-        NoSuchElementException.class
-    })
-    public ResponseEntity<Void> onNotFound(RuntimeException ex) {
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Void> onBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<Void> onResponseStatus(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).build();
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Void> onUnreadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Void> onNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
@@ -44,33 +52,32 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> onValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(e -> {
-            String field = e instanceof FieldError fe ? fe.getField() : e.getObjectName();
-            errors.put(field, e.getDefaultMessage());
-        });
-        HttpHeaders headers = new HttpHeaders();
-        return new ResponseEntity<>(errors, headers, HttpStatus.UNPROCESSABLE_ENTITY);
-    }
-
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Object> handleResponseStatusException(ResponseStatusException ex) {
-        return ResponseEntity.status(ex.getStatusCode()).build();
+        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
+            errors.put(fe.getField(), fe.getDefaultMessage());
+        }
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errors);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleAny(Exception ex) {
+    public ResponseEntity<Object> onAny(Exception ex, HttpServletRequest request) throws Exception {
+        String uri = request.getRequestURI();
+        if (uri != null && uri.startsWith("/api/login")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        if (ex instanceof AuthenticationException || hasCause(ex, AuthenticationException.class)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        throw ex;
+    }
+
+    private static boolean hasCause(Throwable ex, Class<? extends Throwable> type) {
         Throwable cur = ex;
         while (cur != null) {
-            if (cur instanceof ResponseStatusException rse) {
-                return ResponseEntity.status(rse.getStatusCode()).build();
-            }
-            if (cur instanceof EntityNotFoundException
-                    || cur instanceof EmptyResultDataAccessException
-                    || cur instanceof NoSuchElementException) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            if (type.isInstance(cur)) {
+                return true;
             }
             cur = cur.getCause();
         }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        return false;
     }
 }

@@ -75,4 +75,27 @@ public class Label {
             slug = SlugUtils.slugify(name);
         }
     }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Label that = (Label) o;
+        if (this.getId() != null && that.getId() != null) {
+            return this.getId().equals(that.getId());
+        }
+        return this.getName() != null && this.getName().equals(that.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        if (this.getId() != null) {
+            return this.getId().hashCode();
+        }
+        return this.getName() != null ? this.getName().hashCode() : 0;
+    }
+
 }

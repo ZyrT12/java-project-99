@@ -3,6 +3,7 @@ package hexlet.code.service;
 import hexlet.code.dto.users.UserCreateDto;
 import hexlet.code.dto.users.UserResponseDto;
 import hexlet.code.dto.users.UserUpdateDto;
+import hexlet.code.mapper.UserMapper;
 import hexlet.code.model.User;
 import hexlet.code.repository.UserRepository;
 import java.util.List;
@@ -14,77 +15,60 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UsersServiceImpl implements UsersService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
-    public UsersServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UsersServiceImpl(UserRepository userRepository,
+                            PasswordEncoder passwordEncoder,
+                            UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-    }
-
-    @Transactional
-    @Override
-    public UserResponseDto create(UserCreateDto dto) {
-        User user = new User();
-        user.setEmail(dto.email());
-        user.setFirstName(dto.firstName());
-        user.setLastName(dto.lastName());
-        user.setPasswordHash(passwordEncoder.encode(dto.password()));
-        User saved = userRepository.save(user);
-        return toResponse(saved);
+        this.userMapper = userMapper;
     }
 
     @Override
     public List<UserResponseDto> getAll() {
-        return userRepository.findAll().stream().map(this::toResponse).toList();
+        return userRepository.findAll().stream()
+                .map(userMapper::toResponse)
+                .toList();
     }
 
     @Override
     public Optional<UserResponseDto> findById(Long id) {
-        return userRepository.findById(id).map(this::toResponse);
+        return userRepository.findById(id).map(userMapper::toResponse);
     }
 
     @Override
-    public UserResponseDto getById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(NoSuchElementException::new);
-        return toResponse(user);
-    }
-
     @Transactional
+    public UserResponseDto create(UserCreateDto dto) {
+        User user = userMapper.fromCreate(dto);
+        String encoded = passwordEncoder.encode(dto.password());
+        user.setPasswordHash(encoded);
+        User saved = userRepository.save(user);
+        return userMapper.toResponse(saved);
+    }
+
     @Override
+    @Transactional
     public UserResponseDto update(Long id, UserUpdateDto dto) {
         User user = userRepository.findById(id).orElseThrow(NoSuchElementException::new);
-
-        if (dto.email() != null) {
-            user.setEmail(dto.email());
-        }
-        if (dto.firstName() != null) {
-            user.setFirstName(dto.firstName());
-        }
-        if (dto.lastName() != null) {
-            user.setLastName(dto.lastName());
-        }
+        userMapper.update(user, dto);
         if (dto.password() != null) {
             user.setPasswordHash(passwordEncoder.encode(dto.password()));
         }
-
         User saved = userRepository.save(user);
-        return toResponse(saved);
+        return userMapper.toResponse(saved);
     }
 
-    @Transactional
     @Override
     public void delete(Long id) {
         userRepository.deleteById(id);
     }
 
-    private UserResponseDto toResponse(User user) {
-        return new UserResponseDto(
-                user.getId(),
-                user.getEmail(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getCreatedAt()
-        );
+    @Override
+    public User getById(Long id) {
+        return userRepository.findById(id).orElseThrow(NoSuchElementException::new);
     }
 }
