@@ -9,9 +9,8 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,30 +39,24 @@ public class AuthController {
         if (request == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
-        try {
-            String email = request.getEmail();
-            String password = request.getPassword();
-            if (!StringUtils.hasText(email) || !StringUtils.hasText(password)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            Authentication auth = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(email, password)
-            );
-
-            Optional<User> userOpt = userRepository.findByEmail(email);
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-
-            Long userId = userOpt.get().getId();
-            String token = jwtService.issue(userId, email);
-            return ResponseEntity.ok(new LoginResponse(token));
-
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (!StringUtils.hasText(request.getEmail()) || !StringUtils.hasText(request.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
+        try {
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
+            authenticationManager.authenticate(authToken);
+        } catch (AuthenticationException ex) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        if (userOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+
+        User user = userOpt.get();
+        String jwt = jwtService.issue(user.getId(), user.getEmail());
+        return ResponseEntity.ok(new LoginResponse(jwt));
     }
 }

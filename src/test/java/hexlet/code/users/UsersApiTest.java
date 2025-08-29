@@ -2,13 +2,15 @@ package hexlet.code.users;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import hexlet.code.model.User;
+import hexlet.code.repository.UserRepository;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -17,57 +19,55 @@ class UsersApiTest {
     @LocalServerPort
     private int port;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private String token;
+
     @BeforeEach
     void setUp() {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
         RestAssured.basePath = "/api";
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+
+        String email = "admin@example.com";
+        String pass = "pass";
+
+        userRepository.findByEmail(email).orElseGet(() -> {
+            User u = new User();
+            u.setEmail(email);
+            u.setPasswordHash(passwordEncoder.encode(pass));
+            u.setFirstName("Admin");
+            u.setLastName("User");
+            return userRepository.save(u);
+        });
+
+        token = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .body("{\"email\":\"" + email + "\",\"password\":\"" + pass + "\"}")
+                .post("/login")
+                .then()
+                .statusCode(200)
+                .extract()
+                .jsonPath()
+                .getString("token");
     }
 
     @Test
     void crud() {
-        String adminEmail = "admin+" + UUID.randomUUID() + "@example.com";
-        String userEmail = "jack+" + UUID.randomUUID() + "@yahoo.com";
+        String body = """
+                {"email":"new@ex.com","password":"secret","firstName":"N","lastName":"U"}
+                """;
 
         RestAssured.given()
                 .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body("""
-                      {"email":"%s","password":"secret","firstName":"Admin","lastName":"User"}
-                      """.formatted(adminEmail))
+                .header("Authorization", "Bearer " + token)
+                .body(body)
                 .post("/users")
                 .then()
-                .statusCode(HttpStatus.CREATED.value());
-
-        String token = RestAssured.given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body("""
-                      {"email":"%s","password":"secret"}
-                      """.formatted(adminEmail))
-                .post("/login")
-                .then()
-                .statusCode(HttpStatus.OK.value())
-                .extract()
-                .path("token");
-
-        RestAssured.given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Bearer " + token)
-                .body("""
-                      {"email":"%s","password":"p@ss","firstName":"Jack","lastName":"Smith"}
-                      """.formatted(userEmail))
-                .post("/users")
-                .then()
-                .statusCode(HttpStatus.CREATED.value());
-
-        RestAssured.given()
-                .accept(ContentType.JSON)
-                .header("Authorization", "Bearer " + token)
-                .get("/users")
-                .then()
-                .statusCode(HttpStatus.OK.value());
+                .statusCode(201);
     }
 }

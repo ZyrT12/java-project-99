@@ -2,30 +2,33 @@ package hexlet.code.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 class SecurityConfigTest {
 
-    @LocalServerPort
-    private int port;
-
     @Autowired
-    private TestRestTemplate rest;
+    private MockMvc mockMvc;
 
     @Test
-    void publicEndpointsAreAccessible() {
-        ResponseEntity<String> r1 = rest.getForEntity("http://localhost:" + port + "/api/task-statuses", String.class);
-        ResponseEntity<String> r2 = rest.getForEntity("http://localhost:" + port + "/api/users", String.class);
-        assertEquals(HttpStatus.OK, r1.getStatusCode());
-        assertEquals(HttpStatus.OK, r2.getStatusCode());
+    void publicEndpointsAreAccessible() throws Exception {
+        mockMvc.perform(get("/")).andExpect(status().isOk());
+        mockMvc.perform(get("/welcome")).andExpect(status().isOk());
+        mockMvc.perform(get("/index.html")).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
     }
 }

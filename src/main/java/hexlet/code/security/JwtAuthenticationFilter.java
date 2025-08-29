@@ -7,22 +7,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.Optional;
+import org.springframework.http.HttpMethod;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTH_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer";
+    private static final String BEARER = "Bearer ";
+
     private final JwtService jwtService;
-    private final AntPathMatcher matcher = new AntPathMatcher();
 
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
@@ -30,72 +30,56 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String uri = request.getRequestURI();
         String method = request.getMethod();
-        if ("OPTIONS".equalsIgnoreCase(method)) {
+        String uri = request.getRequestURI();
+
+        if (HttpMethod.GET.matches(method) && "/api/login".equals(uri)) {
             return true;
         }
-        String[] publicPatterns = new String[] {
-            "/",
-            "/index.html",
-            "/favicon.ico",
-            "/assets/**",
-            "/css/**",
-            "/js/**",
-            "/images/**",
-            "/static/**",
-            "/actuator/health",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/api/login",
-            "/api/users",
-            "/api/users/**",
-            "/api/tasks",
-            "/api/tasks/**",
-            "/api/task-statuses",
-            "/api/task-statuses/**",
-            "/api/task_statuses",
-            "/api/task_statuses/**",
-            "/api/labels",
-            "/api/labels/**"
-        };
-        for (String pattern : publicPatterns) {
-            if (matcher.match(pattern, uri)) {
-                return true;
-            }
+        if (HttpMethod.OPTIONS.matches(method)) {
+            return true;
+        }
+        if ("/".equals(uri) || "/api".equals(uri) || "/index.html".equals(uri)
+                || uri.startsWith("/assets/") || "/favicon.ico".equals(uri)) {
+            return true;
+        }
+        if (HttpMethod.POST.matches(method) && "/api/login".equals(uri)) {
+            return true;
+        }
+        if (HttpMethod.POST.matches(method) && "/api/users".equals(uri)) {
+            return true;
         }
         return false;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain chain) throws ServletException, IOException {
         String header = request.getHeader(AUTH_HEADER);
-        if (header != null && startsWithBearer(header)) {
-            String token = header.substring(BEARER_PREFIX.length()).trim();
-            Optional<DecodedJWT> decoded = jwtService.verify(token);
-            if (decoded.isPresent()) {
-                String subject = decoded.get().getSubject();
-                Authentication auth = new UsernamePasswordAuthenticationToken(
-                        subject,
-                        null,
-                        Collections.emptyList()
-                );
-                SecurityContextHolder.getContext().setAuthentication(auth);
+        if (header == null || !header.regionMatches(true, 0, BEARER, 0, BEARER.length())) {
+            chain.doFilter(request, response);
+            return;
+        }
+        try {
+            String token = header.substring(BEARER.length()).trim();
+            Optional<DecodedJWT> verified = jwtService.verify(token);
+            if (verified.isPresent()) {
+                DecodedJWT jwt = verified.get();
+                String subject = jwt.getSubject();
+                if (subject != null && !subject.isEmpty()) {
+                    Authentication auth = new UsernamePasswordAuthenticationToken(subject,
+                            null, Collections.emptyList());
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    SecurityContextHolder.clearContext();
+                }
             } else {
                 SecurityContextHolder.clearContext();
             }
+        } catch (Exception e) {
+            SecurityContextHolder.clearContext();
         }
-        filterChain.doFilter(request, response);
-    }
-
-    private boolean startsWithBearer(String header) {
-        if (header.length() < BEARER_PREFIX.length()) {
-            return false;
-        }
-        String prefix = header.substring(0, BEARER_PREFIX.length());
-        return prefix.toLowerCase(Locale.ROOT).equals("bearer");
+        chain.doFilter(request, response);
     }
 }
