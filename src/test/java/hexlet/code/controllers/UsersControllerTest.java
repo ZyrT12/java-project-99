@@ -104,7 +104,7 @@ public class UsersControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(5L))
                 .andExpect(
                         MockMvcResultMatchers.jsonPath("$.email").value("x@example.com")
-                );
+            );
     }
 
     @Test
@@ -133,7 +133,7 @@ public class UsersControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(10L))
                 .andExpect(
                         MockMvcResultMatchers.jsonPath("$.email").value("new@example.com")
-                );
+            );
     }
 
     @Test
@@ -165,7 +165,7 @@ public class UsersControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(7L))
                 .andExpect(
                         MockMvcResultMatchers.jsonPath("$.email").value("upd@example.com")
-                );
+            );
     }
 
     @Test
@@ -197,7 +197,7 @@ public class UsersControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(8L))
                 .andExpect(
                         MockMvcResultMatchers.jsonPath("$.firstName").value("P")
-                );
+            );
     }
 
     @Test
