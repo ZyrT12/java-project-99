@@ -17,15 +17,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsersServiceImpl implements UsersService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public UsersServiceImpl(UserRepository userRepository,
-                            PasswordEncoder passwordEncoder,
-                            UserMapper userMapper) {
+                            UserMapper userMapper,
+                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -36,6 +36,12 @@ public class UsersServiceImpl implements UsersService {
     @Override
     public Optional<UserResponseDto> findById(Long id) {
         return userRepository.findById(id).map(userMapper::toResponse);
+    }
+
+    @Override
+    public UserResponseDto get(Long id) {
+        User user = userRepository.findById(id).orElseThrow(NoSuchElementException::new);
+        return userMapper.toResponse(user);
     }
 
     @Override
@@ -51,10 +57,7 @@ public class UsersServiceImpl implements UsersService {
     @Transactional
     public UserResponseDto update(Long id, UserUpdateDto dto) {
         User user = userRepository.findById(id).orElseThrow(NoSuchElementException::new);
-        userMapper.update(user, dto);
-        if (dto.password() != null && !dto.password().isBlank()) {
-            user.setPasswordHash(passwordEncoder.encode(dto.password()));
-        }
+        userMapper.updateFromDto(dto, user);
         User saved = userRepository.save(user);
         return userMapper.toResponse(saved);
     }

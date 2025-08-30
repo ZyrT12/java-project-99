@@ -11,9 +11,9 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -28,18 +28,19 @@ class AuthControllerTest {
         JwtService jwt = Mockito.mock(JwtService.class);
 
         Authentication auth = new UsernamePasswordAuthenticationToken("john@example.com", "secret");
-        when(authManager
-                .authenticate(ArgumentMatchers.any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
+        when(authManager.authenticate(ArgumentMatchers
+                .any(UsernamePasswordAuthenticationToken.class))).thenReturn(auth);
 
         User user = new User();
+        user.setId(100L);
         user.setEmail("john@example.com");
         user.setPasswordHash("$2a$10$hash");
         when(repo.findByEmail("john@example.com")).thenReturn(Optional.of(user));
 
-        when(jwt.issue(ArgumentMatchers.any(), ArgumentMatchers.eq("john@example.com")))
-                .thenReturn("token-123");
+        when(jwt.issue(ArgumentMatchers.anyLong(),
+                ArgumentMatchers.eq("john@example.com"))).thenReturn("token-123");
 
-        AuthController controller = new AuthController(authManager, repo, jwt);
+        AuthController controller = new AuthController(authManager, jwt, repo);
 
         LoginRequest req = new LoginRequest();
         req.setEmail("john@example.com");
@@ -53,13 +54,20 @@ class AuthControllerTest {
     }
 
     @Test
-    void loginUnauthorizedWhenNoBody() {
+    void loginUnauthorizedWhenBadCredentials() {
         AuthenticationManager authManager = Mockito.mock(AuthenticationManager.class);
         UserRepository repo = Mockito.mock(UserRepository.class);
         JwtService jwt = Mockito.mock(JwtService.class);
 
-        AuthController controller = new AuthController(authManager, repo, jwt);
+        when(authManager.authenticate(ArgumentMatchers.any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("bad creds"));
 
-        assertThrows(ResponseStatusException.class, () -> controller.login(null));
+        AuthController controller = new AuthController(authManager, jwt, repo);
+
+        LoginRequest req = new LoginRequest();
+        req.setEmail("john@example.com");
+        req.setPassword("wrong");
+
+        assertThrows(org.springframework.security.core.AuthenticationException.class, () -> controller.login(req));
     }
 }

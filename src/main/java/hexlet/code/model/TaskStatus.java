@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -20,16 +21,16 @@ public class TaskStatus {
 
     @NotBlank
     @Size(min = 2, max = 255)
-    @Column(nullable = false, length = 255, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @NotBlank
     @Size(min = 2, max = 255)
-    @Column(nullable = false, length = 255, unique = true)
+    @Column(nullable = false, unique = true)
     private String slug;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDate createdAt = LocalDate.now();
+    private LocalDate createdAt;
 
     public TaskStatus() {
     }
@@ -37,6 +38,13 @@ public class TaskStatus {
     public TaskStatus(String name, String slug) {
         this.name = name;
         this.slug = slug;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = LocalDate.now();
+        }
     }
 
     public Long getId() {
@@ -65,5 +73,9 @@ public class TaskStatus {
 
     public void setSlug(String slug) {
         this.slug = slug;
+    }
+
+    public void setCreatedAt(LocalDate createdAt) {
+        this.createdAt = createdAt;
     }
 }

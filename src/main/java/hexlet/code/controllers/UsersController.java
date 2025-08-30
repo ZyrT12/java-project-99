@@ -4,6 +4,7 @@ import hexlet.code.dto.users.UserCreateDto;
 import hexlet.code.dto.users.UserResponseDto;
 import hexlet.code.dto.users.UserUpdateDto;
 import hexlet.code.service.UsersService;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -29,13 +30,13 @@ public class UsersController {
     }
 
     @GetMapping
-    public java.util.List<UserResponseDto> index() {
+    public List<UserResponseDto> index() {
         return usersService.getAll();
     }
 
     @GetMapping("/{id}")
     public UserResponseDto show(@PathVariable Long id) {
-        return usersService.findById(id).orElseThrow(java.util.NoSuchElementException::new);
+        return usersService.get(id);
     }
 
     @PostMapping

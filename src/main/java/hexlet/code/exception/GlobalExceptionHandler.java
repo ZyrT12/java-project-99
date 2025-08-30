@@ -46,4 +46,9 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errors);
     }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Void> onAny(Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
 }
