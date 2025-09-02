@@ -6,9 +6,7 @@ import hexlet.code.dto.labels.LabelUpdateDto;
 import hexlet.code.mapper.LabelMapper;
 import hexlet.code.model.Label;
 import hexlet.code.repository.LabelRepository;
-import hexlet.code.utils.SlugUtils;
 import jakarta.validation.Valid;
-import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
 import org.springframework.stereotype.Service;
@@ -32,7 +30,8 @@ public class LabelServiceImpl implements LabelService {
 
     @Override
     public List<LabelDto> getAll() {
-        return repository.findAll().stream()
+        return repository.findAll()
+                .stream()
                 .map(labelMapper::toDto)
                 .toList();
     }
@@ -40,8 +39,6 @@ public class LabelServiceImpl implements LabelService {
     @Override
     public LabelDto create(@Valid LabelCreateDto data) {
         Label label = labelMapper.fromCreate(data);
-        label.setSlug(SlugUtils.slugify(data.getName()));
-        label.setCreatedAt(Instant.now());
         Label saved = repository.save(label);
         return labelMapper.toDto(saved);
     }
@@ -49,11 +46,7 @@ public class LabelServiceImpl implements LabelService {
     @Override
     public LabelDto update(Long id, @Valid LabelUpdateDto data) {
         Label label = repository.findById(id).orElseThrow(NoSuchElementException::new);
-        String oldName = label.getName();
         labelMapper.updateFromDto(label, data);
-        if (data.getName() != null && !data.getName().equals(oldName)) {
-            label.setSlug(SlugUtils.slugify(data.getName()));
-        }
         Label saved = repository.save(label);
         return labelMapper.toDto(saved);
     }
